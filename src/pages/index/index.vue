@@ -1,19 +1,4 @@
-<route lang="json5" type="home">
-  {
-    name: 'info',
-    style: {
-      navigationStyle: 'default',
-      navigationBarTitleText: '首页',
-    },
-  }
-</route>
-
 <template>
-  <!-- <view class="px-10 py-20 text-center">
-    <wd-button @click="handleClick">
-      跳转分包
-    </wd-button>
-  </view> -->
   <scroll-view style="height: 100vh;" class="bg-gray-50 pb-safe" scroll-y @scroll="onScroll">
     <!-- 顶部 -->
     <view class="mb-2 flex items-center justify-between rounded-lg bg-white px-4 py-3 shadow">
@@ -67,10 +52,10 @@
       <view class="mb-2 rounded-lg bg-gray-200 py-4 text-center text-lg text-gray-700 font-bold">
         重要常驻通知
       </view>
-      <swiper class="rounded-lg" indicator-dots>
+      <swiper class="mt-4 rounded-lg" indicator-dots>
         <swiper-item v-for="outIndex in Math.ceil(swiper.length / 3)" :key="outIndex">
           <view class="grid grid-cols-3 gap-2">
-            <view v-for="inIndex in 3" :key="inIndex" class="rounded-lg bg-gray-100 py-4 text-center text-base text-gray-600 shadow">
+            <view v-for="inIndex in 3" :key="inIndex" class="rounded-lg bg-gray-200 py-4 text-center text-base text-gray-600 shadow">
               {{ swiper[(outIndex - 1) * 3 + (inIndex - 1)] }}
             </view>
           </view>
@@ -134,8 +119,9 @@
 <script setup lang="ts">
 // 快到底部提前加载
 import type { ActivityItem } from '@/api/activities'
-import { onPageScroll } from '@dcloudio/uni-app'
-import { onMounted, ref } from 'vue'
+import { debounce } from 'wot-design-uni/components/common/util'
+// import { onPageScroll } from '@dcloudio/uni-app'
+// import { onMounted, ref } from 'vue'
 import { getActivities } from '@/api/activities'
 
 // 测试
@@ -145,27 +131,27 @@ const globalStore = useGlobalStore()
 
 console.log(globalStore.globalData)
 
-function handleClick() {
-  globalStore.setGlobalData('demo', '1.0.1')
-  router.push({
-    path: '/pages-sub/demo/index',
-    query: {
-      name: '张三'
-    }
-  })
-}
+// function handleClick() {
+//   globalStore.setGlobalData('demo', '1.0.1')
+//   router.push({
+//     path: '/pages-sub/demo/index',
+//     query: {
+//       name: '张三'
+//     }
+//   })
+// }
 
 // 数据
-const back_top = ref(0)
-const isTop = ref(false)
-const infoList = ref([1, 2, 3, 4, 5, 6])
+// const back_top = ref(0)
+// const isTop = ref(false)
+// const infoList = ref([1, 2, 3, 4, 5, 6])
 const showClassifyDropdown = ref(false)
 const classifyType = ref('all')
-const classifyTypes = [
-  { label: '全部', value: 'all' },
-  { label: '信息资讯', value: 'info' },
-  { label: '二课综测', value: 'activity' }
-]
+// const classifyTypes = [
+//   { label: '全部', value: 'all' },
+//   { label: '信息资讯', value: 'info' },
+//   { label: '二课综测', value: 'activity' }
+// ]
 const swiper = ref(['校园跑通知', '四六级考试', '装修通知', '放假通知', '停水通知', '停电通知'])
 const activities = ref<ActivityItem[]>([])
 const activitiesPage = ref(1)
@@ -195,7 +181,7 @@ function onClassifySelect(type: string) {
 function onClassifyMore() {
   showClassifyDropdown.value = false
   uni.navigateTo({
-    url: '/pages-sub/category/index'
+    url: '/subPackage/category/index'
   })
 }
 
@@ -212,24 +198,24 @@ function onOption2() {
 }
 
 // 回到顶部
-function backTop() {
-  uni.pageScrollTo({
-    scrollTop: 0,
-    duration: 100
-  })
-}
+// function backTop() {
+//   uni.pageScrollTo({
+//     scrollTop: 0,
+//     duration: 100
+//   })
+// }
 
 // 页面滚动事件，显示回到顶部按钮
-onPageScroll((e) => {
-  const scrollTop = e.scrollTop
-  if (scrollTop >= back_top.value && !isTop.value) {
-    isTop.value = true
-  } else if (scrollTop <= back_top.value && isTop.value) {
-    isTop.value = false
-  }
-})
+// onPageScroll((e) => {
+//   const scrollTop = e.scrollTop
+//   if (scrollTop >= back_top.value && !isTop.value) {
+//     isTop.value = true
+//   } else if (scrollTop <= back_top.value && isTop.value) {
+//     isTop.value = false
+//   }
+// })
 
-function onScroll(e: any) {
+const onScroll = debounce((e: any) => {
   // 兼容微信小程序 scrollHeight/clientHeight 获取不到的问题
   // 只用 scrollTop 判断，快到底部时触发
   const threshold = 200
@@ -238,13 +224,13 @@ function onScroll(e: any) {
   // 这里假设每个活动卡片高度约 160px，顶部+通知区约 200px
   const estimateHeight = activities.value.length * 160 + 200
   // 如果 scrollTop + 可视区高度（100vh=windowHeight）接近内容总高度，则加载
-  const windowHeight = uni.getSystemInfoSync().windowHeight
+  const windowHeight = uni.getWindowInfo().windowHeight
   if (scrollTop + windowHeight + threshold >= estimateHeight) {
     loadMoreActivities()
   }
   // 调试输出
   // console.log('scrollTop:', scrollTop, 'windowHeight:', windowHeight, 'estimateHeight:', estimateHeight)
-}
+}, 500)
 
 // 生命周期
 async function fetchActivities(page = 1) {
@@ -254,9 +240,9 @@ async function fetchActivities(page = 1) {
   try {
     const res = await getActivities({ page })
     if (page === 1) {
-      activities.value = res.data
+      activities.value = res.data as any
     } else {
-      activities.value = activities.value.concat(res.data)
+      activities.value = activities.value.concat(res.data as any)
     }
     totalActivities.value = res.total
     activitiesPage.value = page
@@ -280,3 +266,9 @@ function loadMoreActivities() {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+::v-deep swiper {
+  height: 180rpx;
+}
+</style>
