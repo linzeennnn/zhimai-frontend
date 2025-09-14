@@ -43,7 +43,7 @@
       <!-- <navigator class="search" url="/pages/search/search">
       <image src="/assets/public/search.png" />
     </navigator> -->
-      <text class="text-xl text-gray-500">
+      <text class="text-xl text-gray-500" @click="navigateTo('/pages/search-page/index')">
         <i class="i-carbon-search" />搜索
       </text>
     </view>
@@ -183,6 +183,11 @@ function onClassifyMore() {
   uni.navigateTo({
     url: '/subPackage/category/index'
   })
+}
+
+// 点击跳转
+function navigateTo(path: string) {
+  router.push({ path })
 }
 
 // 下拉菜单展开/收起
