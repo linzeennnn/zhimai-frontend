@@ -59,7 +59,7 @@
   "middleware": [],
   "subPackages": [
     {
-      "root": "pages-sub",
+      "root": "subPackage",
       "pages": [
         {
           "path": "category/index",
@@ -69,15 +69,6 @@
             "navigationStyle": "custom",
             "navigationBarTitleText": "分类"
           }
-				},
-				{
-					"path": "demo/index",
-					"type": "page",
-					"name": "demo",
-					"style": {
-						"navigationStyle": "default",
-						"navigationBarTitleText": "分包页面 标题"
-					}
         }
       ]
     }
