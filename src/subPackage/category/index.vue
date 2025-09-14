@@ -12,10 +12,10 @@
         分类
       </text>
     </view>
-    <view :style="`height:${capsuleHeight}px;width:${capsuleHeight}px;`" class="flex items-center justify-center">
-      <!-- 右侧胶囊按钮占位，可用 image/svg/slot -->
+    <!-- 右侧胶囊按钮占位，可用 image/svg/slot -->
+    <!-- <view :style="`height:${capsuleHeight}px;width:${capsuleHeight}px;`" class="flex items-center justify-center">
       <image src="/static/capsule.png" style="width:100%;height:100%;" mode="aspectFit" />
-    </view>
+    </view> -->
   </view>
   <view class="flex flex-col" :style="`height: calc(100vh - ${navBarHeight}px)`">
     <!-- 顶部分类 -->
