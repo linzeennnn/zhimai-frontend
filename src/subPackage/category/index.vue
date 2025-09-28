@@ -1,16 +1,16 @@
 <template>
   <!-- 动态适配自定义顶部导航栏 -->
-  <view :style="`height:${navBarHeight}px`" class="nav-bar flex items-end border-b border-gray-200 bg-#2785FF px-4">
+  <view :style="`height:${navBarHeight}px`" class="relative flex items-end border-b border-gray-200 bg-#2785FF">
+    <view class="absolute w-full flex flex-1 items-center justify-center" :style="`height:${capsuleHeight}px;`">
+      <text class="text-white">
+        分类
+      </text>
+    </view>
     <view
-      :style="`height:${capsuleHeight}px;width:${capsuleHeight}px;`" class="flex items-center justify-center"
+      :style="`height:${capsuleHeight}px;width:${capsuleHeight}px;`" class="absolute flex items-center justify-center"
       @click="onCustomBack"
     >
       <wd-icon name="arrow-left" color="white" />
-    </view>
-    <view class="flex flex-1 items-center justify-center" :style="`height:${capsuleHeight}px;`">
-      <text class="text-lg text-white font-bold">
-        分类
-      </text>
     </view>
     <!-- 右侧胶囊按钮占位，可用 image/svg/slot -->
     <!-- <view :style="`height:${capsuleHeight}px;width:${capsuleHeight}px;`" class="flex items-center justify-center">
