@@ -3,55 +3,44 @@
     <div class="px-5 pt-2" style="width: calc(100% - 80rpx)">
       <div class="flex items-center justify-between">
         <div class="flex items-center">
-          <image
-            class="mr-2 h-120rpx w-120rpx border-rounded"
-            src="/src/static/self-center/user.png"
-          />
-          <text>点击登陆</text>
+          <div class="mr-2 h-120rpx w-120rpx overflow-hidden border-rounded-full" style="border: 2rpx solid #8a8a8a">
+            <image class="h-full w-full" src="/src/static/self-center/user-avatar.png" />
+          </div>
+          <div>点击登陆</div>
         </div>
-        <div>
-          <wd-button size="small" type="info">
-            编辑资料
-          </wd-button>
-        </div>
+        <wd-button size="small" type="info" @click="navigateTo('/subPackage/edit-info/index')">
+          编辑资料
+        </wd-button>
       </div>
     </div>
     <!-- 活动提示 -->
-    <wd-popover placement="bottom" use-content-slot>
-      <template #content>
-        <div class="p-3">
-          {{ notice }}
-        </div>
-      </template>
-      <div class="mt-4 h-160rpx w-600rpx flex items-center rounded-3 bg-#EBEBEB px-4">
-        <div class="w-10">
-          <image
-            class="max-h-14 w-10"
-            src="/static/self-center/notice.png"
-            mode="aspectFit"
-          />
-        </div>
-        <div class="ml-3 flex-grow text-ellipsis text-#f46f17" :style="`opacity: ${noticeOpacity}`">
-          {{ notice }}
-        </div>
+    <div class="mt-4 h-160rpx w-600rpx flex items-center rounded-3 bg-#EBEBEB px-4">
+      <div class="w-10" @click="setNotice(noticeIndex + 1)">
+        <image class="max-h-14 w-10" src="/static/self-center/notice.png" mode="aspectFit" />
       </div>
-    </wd-popover>
+      <wd-popover placement="bottom" use-content-slot>
+        <template #content>
+          <div class="p-3">
+            {{ notice }}
+          </div>
+        </template>
+        <div class="ml-3 h-140rpx w-456rpx flex flex-grow items-center">
+          <div class="text-ellipsis text-#f46f17" :style="`opacity: ${noticeOpacity}`">
+            {{ notice }}
+          </div>
+        </div>
+      </wd-popover>
+    </div>
     <div class="mt-3 w-650rpx">
       <div class="font-bold">
         服务中心
       </div>
       <div class="mt-3 flex flex-wrap rounded-3 bg-#EBEBEB">
         <div
-          v-for="(service, index) in services"
-          :key="index"
-          class="h-15 w-15 flex flex-col items-center p-2"
+          v-for="(service, index) in services" :key="index" class="h-15 w-15 flex flex-col items-center p-2"
           @click="navigateTo(service.path)"
         >
-          <image
-            class="max-h-10 w-60rpx"
-            mode="aspectFit"
-            :src="service.img"
-          />
+          <image class="max-h-10 w-60rpx" mode="aspectFit" :src="service.img" />
           <div class="text-27rpx font-bold">
             {{ service.title }}
           </div>
@@ -64,17 +53,11 @@
       </div>
       <div class="mt-3 rounded-3 bg-#EBEBEB">
         <div
-          v-for="(service, index) in moreServices"
-          :key="index"
-          class="flex items-center justify-between p-3"
+          v-for="(service, index) in moreServices" :key="index" class="flex items-center justify-between p-3"
           @click="navigateTo(service.path)"
         >
           <div class="flex items-center">
-            <image
-              class="max-h-6 w-6"
-              :src="service.img"
-              mode="aspectFit"
-            />
+            <image class="max-h-6 w-6" :src="service.img" mode="aspectFit" />
             <div class="ml-2 text-4 font-bold">
               {{ service.title }}
             </div>
@@ -91,9 +74,9 @@ const router = useRouter()
 const globalStore = useGlobalStore()
 
 // 路由跳转
-function navigateTo(path: string) {
-  console.log('navigateTo', path)
-  router.push({ path })
+function navigateTo(url: string) {
+  console.log('navigateTo', url)
+  uni.navigateTo({ url })
 }
 
 // 轮播-活动提醒
@@ -151,11 +134,19 @@ const moreServices = [
   }
 ]
 
-onMounted(() => {
+const interval = ref<NodeJS.Timeout | null>(null)
+
+// 设置定时器-显示提示
+function setNotice(index: number) {
+  if (index > noticeList.value.length - 1)
+    index = 0
   // 初始化提示文字
-  notice.value = noticeList.value?.[0] || ''
-  // 提示文字
-  setInterval(() => {
+  notice.value = noticeList.value[index] || ''
+  noticeIndex.value = index
+  // 清除定时器
+  clearInterval(interval.value as NodeJS.Timeout)
+  // 切换提示文字
+  interval.value = setInterval(() => {
     noticeOpacity.value = 0
     setTimeout(() => {
       noticeIndex.value++
@@ -165,6 +156,10 @@ onMounted(() => {
       noticeOpacity.value = 1
     }, 500)
   }, 3000)
+}
+
+onMounted(() => {
+  setNotice(0)
 })
 </script>
 
@@ -184,6 +179,7 @@ onMounted(() => {
   word-break: break-all;
   /* 允许在单词内换行:cite[1]:cite[7] */
 }
+
 ::v-deep .wd-popover__pos {
   width: 500rpx;
 }

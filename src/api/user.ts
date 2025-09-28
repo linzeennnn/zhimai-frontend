@@ -1,31 +1,5 @@
+import type { LoginParams, UserInfo } from '@/types/user'
 import { get, post } from '@/utils/request'
-
-/**
- * 用户信息接口返回类型
- */
-interface UserInfo {
-  id: string
-  username: string
-  avatar: string
-  [key: string]: any
-}
-
-/**
- * 登录参数类型
- */
-interface LoginParams {
-  code: string
-  nickname: string
-  avatarUrl: string
-}
-
-/**
- * 登录响应类型
- */
-interface LoginResponse {
-  token: string
-  user: UserInfo
-}
 
 /**
  * 获取用户信息

@@ -57,5 +57,20 @@
     }
   },
   "middleware": [],
-  "subPackages": []
+  "subPackages": [
+    {
+      "root": "subPackage",
+      "pages": [
+        {
+          "path": "edit-info/index",
+          "type": "page",
+          "name": "edit-info",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "编辑个人资料"
+          }
+        }
+      ]
+    }
+  ]
 }
