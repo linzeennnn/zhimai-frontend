@@ -62,12 +62,12 @@
       "root": "subPackage",
       "pages": [
         {
-          "path": "edit-info/index",
+          "path": "remind/index",
           "type": "page",
-          "name": "edit-info",
+          "name": "remind",
           "style": {
-            "navigationStyle": "custom",
-            "navigationBarTitleText": "编辑个人资料"
+            "navigationStyle": "default",
+            "navigationBarTitleText": "定时提醒"
           }
         }
       ]
