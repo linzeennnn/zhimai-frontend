@@ -16,6 +16,7 @@ export async function getUserProfile() {
           avatarUrl,
           nickname: nickName
         }
+        console.log('获取用户信息成功', userStore.userProfile)
         return resolve(profileRes)
       },
       fail: (err) => {
@@ -33,12 +34,15 @@ export async function login() {
       provider: 'weixin',
       success: async (loginRes) => {
         // loginRes.code 即微信登录凭证
+        console.log('wxLogin', loginRes)
         const code = loginRes.code
         const res = await loginApi({
           code,
           ...userStore.userProfile
         })
         setToken(res.token)
+        userStore.setUserProfile(res.userInfo)
+        console.log('登陆成功', res.userInfo)
         return resolve(res)
       },
       fail: (err) => {

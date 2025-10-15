@@ -1,5 +1,5 @@
 export const campusColumns = ['广州校区', '清远校区', '肇庆校区']
-export const instituteColumns = ['计算机学院', '金融与经济学院', '外国语学院']
+export const collegeColumns = ['计算机学院', '金融与经济学院', '外国语学院']
 export const majorOptions = {
   计算机学院: [
     '计算机科学与技术',

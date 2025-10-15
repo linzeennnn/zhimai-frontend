@@ -2,20 +2,25 @@
   <div class="flex flex-col items-center">
     <div class="px-5 pt-2" style="width: calc(100% - 80rpx)">
       <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <div class="mr-2 h-120rpx w-120rpx overflow-hidden border-rounded-full" style="border: 2rpx solid #8a8a8a">
-            <image class="h-full w-full" src="/src/static/self-center/user-avatar.png" />
+        <div class="flex items-center" @click="judgeLogin('login')">
+          <div class="mr-2 h-120rpx w-120rpx overflow-hidden border-rounded-full">
+            <image class="h-full w-full" :src="userStore.userProfile.avatarUrl" />
           </div>
-          <div>点击登陆</div>
+          <div v-if="userStore.isLogin === false">
+            点击登陆
+          </div>
+          <div v-else>
+            {{ userStore.userProfile.nickname }}
+          </div>
         </div>
-        <wd-button size="small" type="info" @click="navigateTo('/subPackage/edit-info/index')">
+        <wd-button size="small" type="info" @click="judgeLogin('edit-self')">
           编辑资料
         </wd-button>
       </div>
     </div>
     <!-- 活动提示 -->
     <div class="mt-4 h-160rpx w-600rpx flex items-center rounded-3 bg-#EBEBEB px-4">
-      <div class="w-10" @click="setNotice(noticeIndex + 1)">
+      <div class="w-10" @click="judgeLogin('notice')">
         <image class="max-h-14 w-10" src="/static/self-center/notice.png" mode="aspectFit" />
       </div>
       <wd-popover placement="bottom" use-content-slot>
@@ -38,7 +43,7 @@
       <div class="mt-3 flex flex-wrap rounded-3 bg-#EBEBEB">
         <div
           v-for="(service, index) in services" :key="index" class="h-15 w-15 flex flex-col items-center p-2"
-          @click="navigateTo(service.path)"
+          @click="judgeLogin('service-center', service.path)"
         >
           <image class="max-h-10 w-60rpx" mode="aspectFit" :src="service.img" />
           <div class="text-27rpx font-bold">
@@ -54,7 +59,7 @@
       <div class="mt-3 rounded-3 bg-#EBEBEB">
         <div
           v-for="(service, index) in moreServices" :key="index" class="flex items-center justify-between p-3"
-          @click="navigateTo(service.path)"
+          @click="judgeLogin('service-center', service.path)"
         >
           <div class="flex items-center">
             <image class="max-h-6 w-6" :src="service.img" mode="aspectFit" />
@@ -67,11 +72,107 @@
       </div>
     </div>
   </div>
+
+  <!-- 授权微信操作操作 -->
+  <wd-action-sheet v-model="showLogin" :actions="actions" @close="showLogin = false" @select="confirmLogin" />
+  <!-- 选择登陆 -->
+  <!-- <wd-overlay :show="showLogin" @click="showLogin = false" />
+  <div class="login-modal" v-if="showLogin">
+    <button class="avatar-button" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
+      <div class="avatar-box">
+        <image class="avatar" :src="userInfo.avatarUrl" />
+        <div class="text-27rpx">选择头像</div>
+      </div>
+    </button>
+
+    <wd-cell title="昵称">
+      <input type="nickname" placeholder="请输入昵称" @change="onInputNickname" />
+    </wd-cell>
+
+    <div class="flex justify-around">
+      <wd-button type="primary" @click="confirmLogin">确认登录</wd-button>
+      <wd-button type="info" @click="cancelLogin">取消</wd-button>
+    </div>
+  </div> -->
 </template>
 
 <script setup lang="ts">
-const router = useRouter()
-const globalStore = useGlobalStore()
+import { useGlobalToast } from '../../hooks/useGlobalToast'
+import { login } from '../../hooks/useLogin'
+import { useUserStore } from '../../pinia/store/user'
+import { moreServices, services } from './config'
+
+const userStore = useUserStore()
+const globalToast = useGlobalToast()
+const showLogin = ref<boolean>(false)
+const noticeIndex = ref<number>(0)
+const actions = [
+  {
+    name: '授权微信登陆'
+  }
+]
+// const userInfo = ref<any>({
+//   nickname: userStore.userProfile.nickname || '知脉用户007',
+//   avatarUrl: userStore.userProfile.avatarUrl || '/static/self-center/user-avatar.png'
+// })
+
+function judgeLogin(type: string, url?: string) {
+  if (userStore.isLogin === false) {
+    showLogin.value = true
+  } else {
+    switch (type) {
+      case 'edit-self':
+        navigateTo('/subPackage/edit-info/index')
+        break
+      case 'notice':
+        setNotice(noticeIndex.value + 1)
+        break
+      case 'service-center':
+        if (url)
+          navigateTo(url)
+        break
+    }
+  }
+}
+
+async function confirmLogin() {
+  await login()
+  globalToast.success('登录成功')
+  // userInfo.value = {
+  //   nickname: userStore.userProfile.nickname || '知脉用户',
+  //   avatarUrl: userStore.userProfile.avatarUrl || '/static/self-center/user-avatar.png'
+  // }
+  // console.log('ssss', userInfo.value)
+  userStore.setLoginStatus(true)
+  setNotice(0)
+}
+
+// // 选择头像
+// function onChooseAvatar(e: any) {
+//   console.log('选择头像', e)
+//   const { avatarUrl } = e.detail
+//   userInfo.value = { avatarUrl }
+//   // userStore.setUserProfile({ ...userStore.userProfile, avatarUrl })
+// }
+// // 选择昵称
+// function onInputNickname(e: any) {
+//   console.log('输入昵称', e)
+//   const { value } = e.detail
+//   userInfo.value = { ...userInfo.value, nickname: value }
+// }
+// // 取消登陆
+// function cancelLogin() {
+//   userInfo.value = { ...userStore.userProfile }
+//   showLogin.value = false
+// }
+// // 确认登陆
+// async function confirmLogin() {
+//   userStore.setUserProfile({ ...userStore.userProfile, ...userInfo.value })
+//   await login()
+//   globalToast.success('登录成功')
+//   userStore.setLoginStatus(true)
+//   showLogin.value = false
+// }
 
 // 路由跳转
 function navigateTo(url: string) {
@@ -81,7 +182,6 @@ function navigateTo(url: string) {
 
 // 轮播-活动提醒
 const notice = ref<string>('')
-const noticeIndex = ref<number>(0)
 const noticeOpacity = ref<number>(1)
 const noticeList = ref<Array<string>>([
   'tsetest',
@@ -91,53 +191,18 @@ const noticeList = ref<Array<string>>([
   '青青子衿，悠悠我心。纵我不往，子宁不嗣音？青青子佩，悠悠我思。纵我不往，子宁不来？挑兮达兮，在城阙兮。一日不见，如三月兮！'
 ])
 
-// 服务中心
-const services = [
-  {
-    img: '/static/self-center/history.png',
-    title: '浏览历史',
-    path: '/subPackage/history/index'
-  },
-  {
-    img: '/static/self-center/collection.png',
-    title: '我的收藏',
-    path: '/subPackage/collection/index'
-  },
-  {
-    img: '/static/self-center/alarm.png',
-    title: '定时提醒',
-    path: '/subPackage/remind/index'
-  }
-]
-
-// 更多服务
-const moreServices = [
-  {
-    img: '/static/self-center/aboutus.png',
-    title: '关于我们',
-    path: '/subPackage/aboutus/index'
-  },
-  {
-    img: '/static/self-center/help-center.png',
-    title: '帮助中心',
-    path: '/subPackage/help-center/index'
-  },
-  {
-    img: '/static/self-center/cooperation.png',
-    title: '商务合作',
-    path: '/subPackage/cooperation/index'
-  },
-  {
-    img: '/static/self-center/account.png',
-    title: '账号与安全',
-    path: '/subPackage/account/index'
-  }
-]
-
 const interval = ref<NodeJS.Timeout | null>(null)
 
 // 设置定时器-显示提示
 function setNotice(index: number) {
+  if (!userStore.isLogin || noticeList.value.length === 0) {
+    notice.value = '暂无通知'
+    return
+  }
+  if (noticeList.value.length === 1) {
+    notice.value = noticeList.value[0] || ''
+    return
+  }
   if (index > noticeList.value.length - 1)
     index = 0
   // 初始化提示文字
@@ -182,5 +247,36 @@ onMounted(() => {
 
 ::v-deep .wd-popover__pos {
   width: 500rpx;
+}
+
+.login-modal {
+  background-color: white;
+  position: absolute;
+  bottom: 0;
+  border-top-left-radius: 10rpx;
+  border-top-right-radius: 10rpx;
+  width: 100%;
+  z-index: 10;
+
+  .avatar-button {
+    width: 200rpx;
+    height: 200rpx;
+
+    .avatar-box {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 150rpx;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+
+      .avatar {
+        border-radius: 100%;
+        width: 100rpx;
+        height: 100rpx;
+      }
+    }
+  }
 }
 </style>

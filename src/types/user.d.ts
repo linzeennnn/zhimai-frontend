@@ -19,7 +19,7 @@ export interface SelfInfo {
   campus: string | undefined // 校区
   grade: number | string // 年级
   major: string | undefined // 专业
-  institute: string | undefined // 学院
+  college: string | undefined // 学院
 }
 
 /**
