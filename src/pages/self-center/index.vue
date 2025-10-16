@@ -75,28 +75,10 @@
 
   <!-- 授权微信操作操作 -->
   <wd-action-sheet v-model="showLogin" :actions="actions" @close="showLogin = false" @select="confirmLogin" />
-  <!-- 选择登陆 -->
-  <!-- <wd-overlay :show="showLogin" @click="showLogin = false" />
-  <div class="login-modal" v-if="showLogin">
-    <button class="avatar-button" open-type="chooseAvatar" @chooseavatar="onChooseAvatar">
-      <div class="avatar-box">
-        <image class="avatar" :src="userInfo.avatarUrl" />
-        <div class="text-27rpx">选择头像</div>
-      </div>
-    </button>
-
-    <wd-cell title="昵称">
-      <input type="nickname" placeholder="请输入昵称" @change="onInputNickname" />
-    </wd-cell>
-
-    <div class="flex justify-around">
-      <wd-button type="primary" @click="confirmLogin">确认登录</wd-button>
-      <wd-button type="info" @click="cancelLogin">取消</wd-button>
-    </div>
-  </div> -->
 </template>
 
 <script setup lang="ts">
+import { getRemindListApi } from '../../api/activity'
 import { useGlobalToast } from '../../hooks/useGlobalToast'
 import { login } from '../../hooks/useLogin'
 import { useUserStore } from '../../pinia/store/user'
@@ -104,17 +86,16 @@ import { moreServices, services } from './config'
 
 const userStore = useUserStore()
 const globalToast = useGlobalToast()
+// 登陆抽屉显示
 const showLogin = ref<boolean>(false)
+// 活动提醒列表
 const noticeIndex = ref<number>(0)
+const noticeList = ref<Array<string>>([])
 const actions = [
   {
     name: '授权微信登陆'
   }
 ]
-// const userInfo = ref<any>({
-//   nickname: userStore.userProfile.nickname || '知脉用户007',
-//   avatarUrl: userStore.userProfile.avatarUrl || '/static/self-center/user-avatar.png'
-// })
 
 function judgeLogin(type: string, url?: string) {
   if (userStore.isLogin === false) {
@@ -138,41 +119,39 @@ function judgeLogin(type: string, url?: string) {
 async function confirmLogin() {
   await login()
   globalToast.success('登录成功')
-  // userInfo.value = {
-  //   nickname: userStore.userProfile.nickname || '知脉用户',
-  //   avatarUrl: userStore.userProfile.avatarUrl || '/static/self-center/user-avatar.png'
-  // }
-  // console.log('ssss', userInfo.value)
   userStore.setLoginStatus(true)
-  setNotice(0)
+  setNoticeList().then(() => {
+    setNotice(0)
+  })
 }
 
-// // 选择头像
-// function onChooseAvatar(e: any) {
-//   console.log('选择头像', e)
-//   const { avatarUrl } = e.detail
-//   userInfo.value = { avatarUrl }
-//   // userStore.setUserProfile({ ...userStore.userProfile, avatarUrl })
-// }
-// // 选择昵称
-// function onInputNickname(e: any) {
-//   console.log('输入昵称', e)
-//   const { value } = e.detail
-//   userInfo.value = { ...userInfo.value, nickname: value }
-// }
-// // 取消登陆
-// function cancelLogin() {
-//   userInfo.value = { ...userStore.userProfile }
-//   showLogin.value = false
-// }
-// // 确认登陆
-// async function confirmLogin() {
-//   userStore.setUserProfile({ ...userStore.userProfile, ...userInfo.value })
-//   await login()
-//   globalToast.success('登录成功')
-//   userStore.setLoginStatus(true)
-//   showLogin.value = false
-// }
+async function setNoticeList() {
+  const res = await getRemindListApi()
+  console.log('用户提醒活动列表', res, typeof res)
+  res.forEach((act: any) => {
+    console.log('act', act)
+    const { activity, type } = act
+    let notice = ''
+    if (activity && activity.title) {
+      notice += `"${activity.title}"`
+      switch (type) {
+        case 'activity_registration':
+          notice += '活动报名即将开始'
+          break
+        case 'activity_checkin':
+          notice += '活动签到即将开始'
+          break
+        case 'activity_start':
+          notice += '活动即将开始'
+          break
+        case 'activity_end':
+          notice += '活动即将结束'
+          break
+      }
+      noticeList.value.push(notice)
+    }
+  })
+}
 
 // 路由跳转
 function navigateTo(url: string) {
@@ -183,20 +162,12 @@ function navigateTo(url: string) {
 // 轮播-活动提醒
 const notice = ref<string>('')
 const noticeOpacity = ref<number>(1)
-const noticeList = ref<Array<string>>([
-  'tsetest',
-  '千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。',
-  '春眠不觉晓，处处闻啼鸟。夜来风雨声，花落知多少。',
-  '桃之夭夭，灼灼其华。之子于归，宜其室家。桃之夭夭，有蕡其实。之子于归，宜其家室。桃之夭夭，其叶蓁蓁。之子于归，宜其家人。',
-  '青青子衿，悠悠我心。纵我不往，子宁不嗣音？青青子佩，悠悠我思。纵我不往，子宁不来？挑兮达兮，在城阙兮。一日不见，如三月兮！'
-])
-
 const interval = ref<NodeJS.Timeout | null>(null)
 
 // 设置定时器-显示提示
 function setNotice(index: number) {
   if (!userStore.isLogin || noticeList.value.length === 0) {
-    notice.value = '暂无通知'
+    notice.value = '暂无提醒通知'
     return
   }
   if (noticeList.value.length === 1) {
@@ -224,7 +195,11 @@ function setNotice(index: number) {
 }
 
 onMounted(() => {
-  setNotice(0)
+  if (userStore.isLogin) {
+    setNoticeList().then(() => {
+      setNotice(0)
+    })
+  }
 })
 </script>
 
