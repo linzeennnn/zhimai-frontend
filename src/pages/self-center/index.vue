@@ -199,6 +199,8 @@ onMounted(() => {
     setNoticeList().then(() => {
       setNotice(0)
     })
+  } else {
+    notice.value = '暂无提醒通知'
   }
 })
 </script>

@@ -35,12 +35,13 @@
       {{ item.title ?? '活动标题' }}
     </div>
     <div class="text-base text-gray-400">
-      {{ item.start_time ?? '活动时间' }}
+      {{ formatTime(item.created_at) ?? '活动时间' }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { formatTime } from '../../../utils/date'
 import ShowHeadImg from './ShowHeadImg.vue'
 import ShowImg from './ShowImg.vue'
 

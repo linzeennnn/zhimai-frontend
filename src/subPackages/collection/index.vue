@@ -3,9 +3,12 @@
     <!-- 顶部 -->
     <div class="div-top relative flex items-center justify-between text-5">
       <wd-icon v-if="!isEdit" name="search" size="35rpx" @click="navigateTo('search')" />
-      <wd-checkbox v-else v-model="checkAll" size="large" @change="selectAll">
+      <div v-else class="text-red" @click="confirmClear">
+        清空所有
+      </div>
+      <!-- <wd-checkbox v-else v-model="checkAll" size="large" @change="selectAll">
         全选
-      </wd-checkbox>
+      </wd-checkbox> -->
       <div v-if="!isEdit" @click="isEdit = true">
         管理
       </div>
@@ -21,9 +24,8 @@
     <!-- 列表 -->
     <div class="mt-5">
       <div v-for="(item, index) in actList" :key="index" class="act-item mb-5">
-        <!-- 待完成，用favoriteTime计算date -->
         <div v-if="index === 0 || item.date !== actList[index - 1].date" class="my-3 text-4">
-          {{ formatDate(item.date) }}
+          {{ item.date }}
         </div>
         <wd-checkbox v-if="isEdit" v-model="item.checked" size="large">
           <Info :item="item" :index="index" :is-function="false" />
@@ -34,14 +36,20 @@
       </div>
     </div>
   </div>
+  <wd-loadmore :state="state" finished-text="触碰到我的底线啦~" @reload="loadmore" />
+  <wd-message-box />
 </template>
 
 <script setup lang="ts">
+import type { LoadMoreState } from 'wot-design-uni/components/wd-loadmore/types'
 import { onMounted } from 'vue'
-import { getCollectionListApi } from '../../api/activity'
+import { clearCollectionsApi, deleteCollectionsApi, getCollectionListApi } from '../../api/activity'
+import { formatDate } from '../../utils/date'
 import Info from './components/Info.vue'
 
-const actList = ref<Array<any>>([])
+const message = useMessage()
+
+const actList = ref<any>([])
 
 // 跳转到搜索页
 function navigateTo() {
@@ -53,43 +61,81 @@ function navigateTo() {
   })
 }
 
-// 格式化日期显示
-function formatDate(d: Date | string | number) {
-  const date = new Date(d)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
+// 列表加载状态
+const state = ref<LoadMoreState | undefined>('loading')
+const page = ref<number>(1)
+const pageSize = 3
+// 到达底部
+onReachBottom(() => {
+  console.log('reachBottom')
+  if (state.value === 'finished')
+    return
+  loadmore()
+})
+// 加载更多
+async function loadmore() {
+  if (state.value === 'finished')
+    return
+  state.value = 'loading'
+  await getCollections()
 }
 
 // 点击管理
 const isEdit = ref<boolean>(false)
-// 是否全选
-const checkAll = ref<boolean>(false)
-// 全选判定
-function selectAll() {
-  if (checkAll.value) {
-    actList.value = actList.value.map((item: any) => {
-      item.checked = true
-      return item
-    })
-  } else {
-    actList.value = actList.value.map((item: any) => {
-      item.checked = false
-      return item
-    })
+// 清空收藏记录
+function confirmClear() {
+  if (actList.value && actList.value.length) {
+    message
+      .confirm({
+        msg: '确认清空收藏记录'
+      })
+      .then(async () => {
+        await clearCollectionsApi()
+        actList.value = []
+        isEdit.value = false
+        console.log('清空收藏列表')
+      })
+      .catch(() => {
+        console.log('取消清空')
+      })
   }
 }
-// 删除
-// 接口待联调（需要注意，这里是分页加载，如果点击全选，可能有未显示的数据，也应当删除，需要同后端协调）
-function deleteAct() {
+
+// 批量删除
+async function deleteAct() {
+  const ids = actList.value
+    .filter((item: any) => item.checked)
+    .map((item: any) => item.activity_id)
+  if (ids.length)
+    await deleteCollectionsApi(ids)
   actList.value = actList.value.filter((item: any) => !item.checked)
 }
 
+// 设置日期格式
+function resetDateFormat(list: any[]) {
+  return list.map((item) => {
+    item.date = formatDate(item.favoriteTime)
+    return item
+  })
+}
+// 获取收藏列表
+async function getCollections() {
+  const res = await getCollectionListApi({ page: page.value++, size: pageSize })
+  const acts: any = res
+  if (!acts || !acts.length) {
+    state.value = 'finished'
+    return
+  }
+  actList.value = actList.value.concat(res)
+  actList.value = resetDateFormat(actList.value)
+  if (acts.length < pageSize) {
+    state.value = 'finished'
+  }
+  console.log('res', res, actList.value)
+}
+
 onMounted(async () => {
-  const res = await getCollectionListApi()
-  actList.value = res
-  console.log('res', res)
+  await getCollections()
 })
 </script>
 
