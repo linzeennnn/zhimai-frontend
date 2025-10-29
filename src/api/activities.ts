@@ -69,9 +69,18 @@ export interface ActivitiesQuery {
   organizer?: string
   keyword?: string
   page?: number
-  pageSize?: number
+  size?: number
 }
 
 export function getActivities(params?: ActivitiesQuery) {
   return get<ActivitiesResponse>('/activities', params)
+}
+
+/**
+ * 加入单个活动收藏
+ * @param params 参数{ id : 活动ID }
+ * @returns
+ */
+export function addFavorite(params: any) {
+  return get<any>('/activities/user/addFavorite', params, true)
 }
