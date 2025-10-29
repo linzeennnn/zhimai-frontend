@@ -1,25 +1,38 @@
 <template>
   <div class="px-3 py-5">
     <!-- 顶部 -->
-    <div class="div-top relative flex items-center justify-between text-5">
-      <wd-icon v-if="!isEdit" name="search" size="35rpx" @click="navigateTo('search')" />
-      <div v-else class="text-red" @click="confirmClear">
-        清空所有
-      </div>
+    <div class="div-top relative h-7 flex items-center justify-between text-5">
+      <template v-if="isSearch">
+        <wd-search
+          v-if="isSearch" v-model="searchContent" class="w-full" placeholder="请输入" placeholder-left light
+          :maxlength="30" @search="handleSearch" @cancel="cancelSearch"
+        />
+      </template>
+      <template v-else>
+        <template v-if="isEdit">
+          <div class="text-red" @click="confirmClear">
+            清空所有
+          </div>
+          <div class="flex">
+            <div class="mr-5 text-red" @click="deleteAct">
+              删除
+            </div>
+            <div @click="isEdit = false">
+              取消
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <wd-icon v-if="!isEdit" name="search" size="35rpx" @click="isSearch = true" />
+          <div @click="isEdit = true">
+            管理
+          </div>
+        </template>
+      </template>
+
       <!-- <wd-checkbox v-else v-model="checkAll" size="large" @change="selectAll">
         全选
       </wd-checkbox> -->
-      <div v-if="!isEdit" @click="isEdit = true">
-        管理
-      </div>
-      <div v-else class="flex">
-        <div class="mr-5 text-red" @click="deleteAct">
-          删除
-        </div>
-        <div @click="isEdit = false">
-          取消
-        </div>
-      </div>
     </div>
     <!-- 列表 -->
     <div class="mt-5">
@@ -43,6 +56,7 @@
 <script setup lang="ts">
 import type { LoadMoreState } from 'wot-design-uni/components/wd-loadmore/types'
 import { onMounted } from 'vue'
+import { debounce } from 'wot-design-uni/components/common/util'
 import { clearCollectionsApi, deleteCollectionsApi, getCollectionListApi } from '../../api/activity'
 import { formatDate } from '../../utils/date'
 import Info from './components/Info.vue'
@@ -50,20 +64,39 @@ import Info from './components/Info.vue'
 const message = useMessage()
 
 const actList = ref<any>([])
-
+const page = ref<number>(1)
 // 跳转到搜索页
-function navigateTo() {
-  uni.navigateTo({
-    url: '/subPackages/search-page/index',
-    params: {
-      type: 'collection'
-    }
-  })
+// function navigateTo() {
+//   uni.navigateTo({
+//     url: '/subPackages/search-page/index',
+//     params: {
+//       type: 'collection'
+//     }
+//   })
+// }
+const searchContent = ref<string>('')
+const isSearch = ref<boolean>(false)
+const state = ref<LoadMoreState | undefined>('loading')
+// 点击搜索
+const handleSearch = debounce(() => {
+  searchContent.value = searchContent.value.trim()
+  if (!searchContent.value)
+    return
+  console.log('test Search')
+  getCollections('search', searchContent.value)
+}, 500)
+
+// 取消搜索
+async function cancelSearch() {
+  isSearch.value = false
+  searchContent.value = ''
+  page.value = 1
+  actList.value = []
+  state.value = 'loading'
+  await getCollections()
 }
 
 // 列表加载状态
-const state = ref<LoadMoreState | undefined>('loading')
-const page = ref<number>(1)
 const pageSize = 3
 // 到达底部
 onReachBottom(() => {
@@ -119,15 +152,22 @@ function resetDateFormat(list: any[]) {
   })
 }
 // 获取收藏列表
-async function getCollections() {
-  const res = await getCollectionListApi({ page: page.value++, size: pageSize })
+async function getCollections(type = 'default', content = '') {
+  let res = null
+  if (type === 'search') {
+    res = await getCollectionListApi({ page: page.value++, size: pageSize, content })
+    actList.value = res
+  } else {
+    res = await getCollectionListApi({ page: page.value++, size: pageSize })
+    actList.value = actList.value.concat(res)
+  }
+  actList.value = resetDateFormat(actList.value)
+  // 处理加载状态
   const acts: any = res
   if (!acts || !acts.length) {
     state.value = 'finished'
     return
   }
-  actList.value = actList.value.concat(res)
-  actList.value = resetDateFormat(actList.value)
   if (acts.length < pageSize) {
     state.value = 'finished'
   }
@@ -142,6 +182,11 @@ onMounted(async () => {
 <style lang="scss" scoped>
 .div-top ::v-deep .wd-checkbox__txt {
   font-size: 40rpx;
+}
+
+::v-deep .wd-search.data-v-4ebafd4c {
+  padding: 0;
+  width: 100%;
 }
 
 .act-item ::v-deep .wd-checkbox {
