@@ -54,9 +54,12 @@
 import type { LoadMoreState } from 'wot-design-uni/components/wd-loadmore/types'
 import { onMounted } from 'vue'
 import { debounce } from 'wot-design-uni/components/common/util'
+import AppConfig from '@/config'
 import { clearHistoryApi, closeHistoryApi, deleteHistoryApi, getHistoryListApi } from '../../api/activity'
 import { formatDate } from '../../utils/date'
 import Info from '../components/Info.vue'
+
+const pageSize = AppConfig.pageSize || 10
 
 const message = useMessage()
 const showAction = ref<boolean>(false)
@@ -117,8 +120,6 @@ async function cancelSearch() {
   await getHistory()
 }
 
-// 列表加载状态
-const pageSize = 3
 // 到达底部
 onReachBottom(() => {
   console.log('reachBottom')

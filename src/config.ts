@@ -7,5 +7,6 @@ export default {
   appName: 'zhimai',
   appDescription: 'uniapp-vite-template',
   appVersion: '1.0.0',
-  appVersionCode: '100'
+  appVersionCode: '100',
+  pageSize: 10
 } as const

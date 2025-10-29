@@ -53,9 +53,12 @@
 import type { LoadMoreState } from 'wot-design-uni/components/wd-loadmore/types'
 import { onMounted } from 'vue'
 import { debounce } from 'wot-design-uni/components/common/util'
+import AppConfig from '@/config'
 import { clearCollectionsApi, deleteCollectionsApi, getCollectionListApi } from '../../api/activity'
 import { formatDate } from '../../utils/date'
 import Info from '../components/Info.vue'
+
+const pageSize = AppConfig.pageSize || 10
 
 const message = useMessage()
 
@@ -83,9 +86,6 @@ async function cancelSearch() {
   state.value = 'loading'
   await getCollections()
 }
-
-// 列表加载状态
-const pageSize = 3
 // 到达底部
 onReachBottom(() => {
   console.log('reachBottom')
