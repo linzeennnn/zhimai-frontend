@@ -24,7 +24,7 @@
         </template>
         <template v-else>
           <wd-icon v-if="!isEdit" name="search" size="35rpx" @click="isSearch = true" />
-          <div @click="isEdit = true">
+          <div @click="showAction = true">
             管理
           </div>
         </template>
@@ -45,25 +45,58 @@
       </div>
     </div>
   </div>
-  <wd-loadmore :state="state" finished-text="触碰到我的底线啦~" error-text="加载失败，请返回重试" @reload="loadmore" />
+  <wd-loadmore :state="state" finished-text="触碰到我的底线啦~" error-text="加载失败" @reload="loadmore" />
   <wd-message-box />
+  <wd-action-sheet v-model="showAction" :actions="actions" @close="showAction = false" @select="selectAction" />
 </template>
 
 <script setup lang="ts">
 import type { LoadMoreState } from 'wot-design-uni/components/wd-loadmore/types'
 import { onMounted } from 'vue'
 import { debounce } from 'wot-design-uni/components/common/util'
-import { clearCollectionsApi, deleteCollectionsApi, getCollectionListApi } from '../../api/activity'
+import { clearHistoryApi, closeHistoryApi, deleteHistoryApi, getHistoryListApi } from '../../api/activity'
 import { formatDate } from '../../utils/date'
 import Info from '../components/Info.vue'
 
 const message = useMessage()
-
+const showAction = ref<boolean>(false)
+const actions = ref<any[]>([
+  {
+    name: '批量管理历史浏览'
+  },
+  {
+    name: '关闭历史浏览'
+  }
+])
 const actList = ref<any>([])
+const isEdit = ref<boolean>(false)
+const state = ref<LoadMoreState | undefined>('loading')
 const page = ref<number>(1)
 const searchContent = ref<string>('')
 const isSearch = ref<boolean>(false)
-const state = ref<LoadMoreState | undefined>('loading')
+
+function selectAction(obj: { item: any, index: number }) {
+  const { index } = obj
+  console.log('selectAction', index)
+  if (index === 0) {
+    isEdit.value = true
+  } else if (index === 1) {
+    message
+      .confirm({
+        msg: '确认关闭历史浏览'
+      })
+      .then(async () => {
+        await closeHistoryApi()
+        actList.value = []
+        state.value = 'finished'
+        console.log('关闭历史浏览')
+      })
+      .catch(() => {
+        console.log('取消')
+      })
+  }
+}
+
 // 点击搜索
 const handleSearch = debounce(() => {
   searchContent.value = searchContent.value.trim()
@@ -71,7 +104,7 @@ const handleSearch = debounce(() => {
     return
   console.log('test Search')
   page.value = 1
-  getCollections('search', searchContent.value)
+  getHistory('search', searchContent.value)
 }, 500)
 
 // 取消搜索
@@ -81,7 +114,7 @@ async function cancelSearch() {
   page.value = 1
   actList.value = []
   state.value = 'loading'
-  await getCollections()
+  await getHistory()
 }
 
 // 列表加载状态
@@ -98,24 +131,21 @@ async function loadmore() {
   if (state.value === 'finished')
     return
   state.value = 'loading'
-  await getCollections()
+  await getHistory()
 }
-
-// 点击管理
-const isEdit = ref<boolean>(false)
-// 清空收藏记录
+// 清空历史浏览
 function confirmClear() {
   if (actList.value && actList.value.length) {
     message
       .confirm({
-        msg: '确认清空收藏记录'
+        msg: '确认清空历史浏览'
       })
       .then(async () => {
-        await clearCollectionsApi()
+        await clearHistoryApi()
         actList.value = []
         isEdit.value = false
         state.value = 'finished'
-        console.log('清空收藏列表')
+        console.log('清空历史浏览')
       })
       .catch(() => {
         console.log('取消清空')
@@ -129,26 +159,26 @@ async function deleteAct() {
     .filter((item: any) => item.checked)
     .map((item: any) => item.activity_id)
   if (ids.length)
-    await deleteCollectionsApi(ids)
+    await deleteHistoryApi(ids)
   actList.value = actList.value.filter((item: any) => !item.checked)
 }
 
 // 设置日期格式
 function resetDateFormat(list: any[]) {
   return list.map((item) => {
-    item.date = formatDate(item.favoriteTime)
+    item.date = formatDate(item.hisotryTime)
     return item
   })
 }
-// 获取收藏列表
-async function getCollections(type = 'default', content = '') {
+// 获取历史列表
+async function getHistory(type = 'default', content = '') {
   try {
     let res = null
     if (type === 'search') {
-      res = await getCollectionListApi({ page: page.value, size: pageSize, content })
+      res = await getHistoryListApi({ page: page.value, size: pageSize, content })
       actList.value = res
     } else {
-      res = await getCollectionListApi({ page: page.value, size: pageSize })
+      res = await getHistoryListApi({ page: page.value, size: pageSize })
       actList.value = actList.value.concat(res)
     }
     page.value++
@@ -169,7 +199,7 @@ async function getCollections(type = 'default', content = '') {
 }
 
 onMounted(async () => {
-  await getCollections()
+  await getHistory()
 })
 </script>
 

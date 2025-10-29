@@ -69,6 +69,15 @@
             "navigationStyle": "default",
             "navigationBarTitleText": "我的收藏"
           }
+        },
+        {
+          "path": "history/index",
+          "type": "page",
+          "name": "history",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "历史记录"
+          }
         }
       ]
     }

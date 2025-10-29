@@ -29,3 +29,31 @@ export function deleteCollectionsApi(params: Array<number>) {
 export function clearCollectionsApi() {
   return del<any>('/activities/user/clearFavorites', undefined, true)
 }
+
+/**
+ * 获取用户历史浏览
+ */
+export function getHistoryListApi(params: PageParams) {
+  return get<any>('/activities/user/history', params, true)
+}
+
+/**
+ * 删除用户历史浏览
+ */
+export function deleteHistoryApi(params: Array<number>) {
+  return post<any>('/activities/user/deleteHistory', params, true)
+}
+
+/**
+ * 清空用户历史浏览
+ */
+export function clearHistoryApi() {
+  return del<any>('/activities/user/clearHisotry', undefined, true)
+}
+
+/**
+ * 关闭用户历史浏览
+ */
+export function closeHistoryApi() {
+  return del<any>('/activities/user/closeHisotry', undefined, true)
+}

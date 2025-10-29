@@ -41,7 +41,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatTime } from '../../../utils/date'
+import { formatTime } from '../../utils/date'
 import ShowHeadImg from './ShowHeadImg.vue'
 import ShowImg from './ShowImg.vue'
 
