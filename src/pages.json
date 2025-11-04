@@ -89,6 +89,24 @@
           }
         },
         {
+          "path": "remind/index",
+          "type": "page",
+          "name": "remind",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "定时提醒"
+          }
+        },
+		{
+          "path": "remind-create/index",
+          "type": "page",
+          "name": "remind-create",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "新建定时提醒"
+          }
+        },
+        {
           "path": "collection/index",
           "type": "page",
           "name": "collection",

@@ -49,7 +49,7 @@
 import { useMessage } from 'wot-design-uni'
 import { debounce } from 'wot-design-uni/components/common/util'
 import { historyConfig as config } from '@/config'
-import InfoList from './component/InfoList.vue'
+import InfoList from './component/infoList.vue'
 
 const message = useMessage()
 

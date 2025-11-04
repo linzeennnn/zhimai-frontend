@@ -202,7 +202,7 @@ function onClassifySelect(type: string) {
 function onClassifyMore() {
   showClassifyDropdown.value = false
   uni.navigateTo({
-    url: '/subPackage/category/index'
+    url: '/subPackages/category/index'
   })
 }
 
@@ -220,7 +220,7 @@ function onOptionRemind(item: any) {
     title: item.title
   }
   console.log('test', JSON.stringify(info))
-  navigateTo('/subPackage/remind/index', info)
+  navigateTo('/subPackages/remind/index', info)
 }
 async function onOptionCollect(activity_id: number) {
   judgeLogin()
