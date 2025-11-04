@@ -1,14 +1,6 @@
 import type { LoginParams, SelfInfo } from '@/types/user'
 import { get, post, put } from '@/utils/request'
 
-// /**
-//  * 获取用户信息
-//  * @returns 用户信息
-//  */
-// export function getUserInfo() {
-//   return get<UserInfo>('/user/info')
-// }
-
 /**
  * 用户登录
  * @param params 登录参数
