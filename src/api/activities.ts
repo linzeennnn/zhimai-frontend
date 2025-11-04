@@ -52,7 +52,7 @@ export function getActivityDetail(id: number) {
 export interface ActivitiesResponse {
   total: number
   page: number
-  pageSize: number
+  pageSize?: number
   data: ActivityItem[]
 }
 

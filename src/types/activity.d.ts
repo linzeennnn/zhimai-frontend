@@ -3,6 +3,6 @@
  */
 export interface PageParams {
   page: number
-  size: number
+  size?: number
   content?: string
 }

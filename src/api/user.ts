@@ -43,12 +43,3 @@ export function setUserDetailApi(params: SelfInfo) {
 export function logout() {
   return post<{ success: boolean }>('/user/logout')
 }
-
-// /**
-//  * 获取用户列表
-//  * @param params 查询参数
-//  * @returns 用户列表
-//  */
-// export function getUserList(params?: { page?: number, pageSize?: number }) {
-//   return get<{ list: UserInfo[], total: number }>('/user/list', params)
-// }

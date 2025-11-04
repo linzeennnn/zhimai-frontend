@@ -2,7 +2,8 @@
 
 export default {
   // baseURL: 'http://127.0.0.1:3000',
-  baseURL: 'http://8.134.24.93',
+  // baseURL: 'http://8.134.24.93',
+  baseURL: 'https://zhimainet.cn',
   appId: 'wxc32918dac4588fbb',
   appName: 'zhimai',
   appDescription: 'uniapp-vite-template',

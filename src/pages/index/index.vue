@@ -176,7 +176,7 @@ const classifyType = ref('all')
 const swiper = ref(['校园跑通知', '四六级考试', '装修通知', '放假通知', '停水通知', '停电通知'])
 const activities = ref<ActivityItem[]>([])
 const activitiesPage = ref(1)
-const activitiesPageSize = ref(10)
+const activitiesPageSize = ref(pageSize)
 const totalActivities = ref(0)
 const activitiesLoading = ref(false)
 const dropdownIndex = ref(-1)
@@ -269,7 +269,7 @@ async function fetchActivities(page = 1) {
     return
   activitiesLoading.value = true
   try {
-    const res = await getActivities({ page, size: pageSize })
+    const res = await getActivities({ page })
     if (page === 1) {
       activities.value = res.data as any
     } else {
