@@ -3,17 +3,17 @@ export const services = [
   {
     img: '/static/self-center/history.png',
     title: '浏览历史',
-    path: '/subPackage/history/index'
+    path: '/subPackages/history/index'
   },
   {
     img: '/static/self-center/collection.png',
     title: '我的收藏',
-    path: '/subPackage/collection/index'
+    path: '/subPackages/collection/index'
   },
   {
     img: '/static/self-center/alarm.png',
     title: '定时提醒',
-    path: '/subPackage/remind/index'
+    path: '/subPackages/remind/index'
   }
 ]
 
@@ -22,21 +22,21 @@ export const moreServices = [
   {
     img: '/static/self-center/aboutus.png',
     title: '关于我们',
-    path: '/subPackage/aboutus/index'
+    path: '/subPackages/aboutus/index'
   },
   {
     img: '/static/self-center/help-center.png',
     title: '帮助中心',
-    path: '/subPackage/help-center/index'
+    path: '/subPackages/help-center/index'
   },
   {
     img: '/static/self-center/cooperation.png',
     title: '商务合作',
-    path: '/subPackage/cooperation/index'
+    path: '/subPackages/cooperation/index'
   },
   {
     img: '/static/self-center/account.png',
     title: '账号与安全',
-    path: '/subPackage/account/index'
+    path: '/subPackages/account/index'
   }
 ]

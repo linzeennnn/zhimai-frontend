@@ -124,84 +124,8 @@ const selfInfo = ref<SelfInfo>({
   major: '',
   college: ''
 })
+let originSelfInfo: SelfInfo
 
-// 修改头像
-// const avatarUrl = ref<string>()
-// const actionVisible = ref<boolean>(false)
-// const actionList = ref<{ name: string, value: string }[]>([
-//   { name: '使用微信头像', value: 'wechat' },
-//   { name: '相册选择', value: 'album' },
-//   { name: '拍照上传', value: 'camera' }
-// ])
-// 打开面板
-// function openAction() {
-//   actionVisible.value = true
-// }
-// // 关闭面板
-// function closeAction() {
-//   actionVisible.value = false
-// }
-// // 处理选项
-// function onActionSelect(item: any) {
-//   console.log('选中的 action:', item)
-//   const { value } = item.item
-//   if (value === 'wechat') {
-//     chooseWechatAvatar()
-//   } else if (value === 'album') {
-//     chooseImage('album')
-//   } else if (value === 'camera') {
-//     chooseImage('camera')
-//   }
-// }
-// // 使用微信头像
-// async function chooseWechatAvatar() {
-//   await getUserProfile()
-//   const avatar = userStore.userProfile?.avatarUrl
-//   selfInfo.value.avatarUrl = avatar
-//   console.log('avatar', avatar, '//')
-//   //   wx.getUserProfile({
-//   //     desc: "获取微信头像",
-//   //     success: (res) => {
-//   //       avatarUrl.value = res.userInfo.avatarUrl
-//   //       // TODO: 上传服务器
-//   //     }
-//   //   })
-// }
-// // 相册/拍照
-// function chooseImage(source: 'album' | 'camera') {
-//   //   wx.chooseImage({
-//   //     count: 1,
-//   //     sizeType: ["compressed"],
-//   //     sourceType: [source],
-//   //     success: (res) => {
-//   //       avatarUrl.value = res.tempFilePaths[0]
-//   //       // TODO: 上传服务器
-//   //     }
-//   //   })
-//   // uni.chooseMedia({
-//   //   count: 1,
-//   //   mediaType: ["image"],   // 只要图片
-//   //   sourceType: ["album", "camera"],
-//   //   sizeType: ["compressed"],
-//   //   success: (res) => {
-//   //     // res.tempFiles[0].tempFilePath 替代 tempFilePaths[0]
-//   //     console.log("选择的图片路径:", res.tempFiles[0])
-//   //     avatarUrl.value = res.tempFiles[0].tempFilePath
-//   //   }
-//   // })
-//   uni.chooseImage({
-//     count: 1,
-//     sizeType: ['compressed'],
-//     sourceType: [source],
-//     success: async (res) => {
-//       const filePath = res.tempFilePaths[0]
-//       selfInfo.value.avatarUrl = filePath
-//       console.log('选择的图片路径:', filePath)
-//       // 接口，待联调，图片上传
-//       //   await uploadToAliOSS(filePath)
-//     }
-//   })
-// }
 /* 选择头像 */
 function onChooseAvatar(e: any) {
   console.log('选择头像', e)
@@ -240,8 +164,27 @@ const onInputGrade = debounce((val: any) => {
 
 // 保存
 async function saveUserInfo() {
-  console.log('保存', selfInfo.value)
-  const res = await setUserDetailApi(selfInfo.value)
+  console.log('保存', selfInfo.value, originSelfInfo)
+  // 仅发送修改的字段
+  const keys = Object.keys(originSelfInfo)
+  keys.forEach((key) => {
+    if ((selfInfo.value as any)[key] === (originSelfInfo as any)[key]) {
+      console.log('del', key)
+      delete originSelfInfo[key]
+    } else {
+      originSelfInfo[key] = (selfInfo.value as any)[key]
+    }
+  })
+  console.log('sss', originSelfInfo)
+  if (JSON.stringify(originSelfInfo) === '{}') {
+    globalToast.info('未修改任何信息')
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 1000)
+    return
+  }
+
+  const res = await setUserDetailApi(originSelfInfo)
   console.log('save self-info res', res)
   globalToast.success('修改成功')
   userStore.userProfile.avatarUrl = selfInfo.value.avatarUrl
@@ -254,6 +197,16 @@ async function saveUserInfo() {
 onMounted(async () => {
   const res = await getUserDetailApi()
   console.log('获取用户详情', res)
+  originSelfInfo = {
+    avatarUrl: res.avatarUrl || '/static/self-center/user-avatar.png',
+    nickname: res.nickname || '知脉用户007',
+    email: res.email || '',
+    phone: res.phone,
+    campus: res.campus || '',
+    grade: res.grade || '',
+    major: res.major || '',
+    college: res.college || ''
+  }
   selfInfo.value = {
     ...selfInfo.value,
     ...res,
