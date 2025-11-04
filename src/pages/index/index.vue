@@ -40,12 +40,7 @@
         </view>
       </view>
       <!-- 跳转"搜索页面" -->
-      <!-- <navigator class="search" url="/pages/search/search">
-      <image src="/assets/public/search.png" />
-    </navigator> -->
-      <text class="text-xl text-gray-500" @click="navigateTo('/pages/search-page/index')">
-        <i class="i-carbon-search" />搜索
-      </text>
+      <wd-icon name="search" size="35rpx" @click="navigateTo('/pages/search-page/index')" />
     </view>
     <!-- 置顶通知 -->
     <view class="mb-2">
@@ -67,35 +62,37 @@
         <view v-for="(item, index) in activities" :key="item.activity_id" class="rounded-lg bg-white p-4 shadow">
           <view class="mb-2 flex items-center justify-between">
             <view class="flex items-center gap-2">
-              <view class="h-8 w-8 flex items-center justify-center rounded-full bg-gray-200 text-lg text-gray-400">
+              <ShowHeadImg />
+              <!-- <view class="h-8 w-8 flex items-center justify-center rounded-full bg-gray-200 text-lg text-gray-400">
                 {{ '人' }}
-              </view>
+              </view> -->
               <text class="text-base text-gray-800 font-bold">
                 {{ item.organizer ?? '公众号标题' }}
               </text>
             </view>
             <view class="relative">
-              <view class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 transition hover:bg-primary/10" @click.stop="toggleDropdown(index)">
+              <view class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300" @click.stop="toggleDropdown(index)">
                 功能﹀
               </view>
               <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
-                <view class="cursor-pointer rounded px-3 py-2 hover:bg-primary/10" @click="onOption1">
+                <view class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300" @click="onOptionRemind(item)">
                   定时提醒
                 </view>
-                <view class="cursor-pointer rounded px-3 py-2 hover:bg-primary/10" @click="onOption2">
+                <view class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300" @click="onOptionCollect(item.activity_id)">
                   加入收藏
                 </view>
               </view>
             </view>
           </view>
-          <view class="mb-2 h-24 flex items-center justify-center overflow-hidden rounded-lg bg-blue-50 text-xl text-blue-400 font-bold">
+          <!-- <view class="mb-2 h-24 flex items-center justify-center overflow-hidden rounded-lg bg-blue-50 text-xl text-blue-400 font-bold">
             {{ item.image_url ?? '活动图片' }}
-          </view>
+          </view> -->
+          <ShowImg :item="item" />
           <view class="mb-1 text-base text-gray-700 font-bold">
             {{ item.title ?? '活动标题' }}
           </view>
           <view class="text-xs text-gray-400">
-            {{ item.start_time ?? '活动时间' }}
+            {{ formatTime(item.created_at) ?? '活动时间' }}
           </view>
         </view>
       </view>
@@ -114,22 +111,46 @@
       </view>
     </view> -->
   </scroll-view>
+  <!-- 授权微信操作操作 -->
+  <wd-action-sheet v-model="showLogin" :actions="actions" @close="showLogin = false" @select="confirmLogin" />
 </template>
 
 <script setup lang="ts">
 // 快到底部提前加载
 import type { ActivityItem } from '@/api/activities'
 import { debounce } from 'wot-design-uni/components/common/util'
+import { addFavorite, getActivities } from '@/api/activities'
+import Appconfig from '@/config'
+import { useGlobalToast } from '@/hooks/useGlobalToast'
+import { login } from '@/hooks/useLogin'
 // import { onPageScroll } from '@dcloudio/uni-app'
 // import { onMounted, ref } from 'vue'
-import { getActivities } from '@/api/activities'
+import ShowHeadImg from '@/pages/components/ShowHeadImg.vue'
+import ShowImg from '@/pages/components/ShowImg.vue'
+import { useUserStore } from '@/pinia/store/user'
+import { formatTime } from '@/utils/date'
 
-// 测试
-const router = useRouter()
+const userStore = useUserStore()
+const pageSize = Appconfig.pageSize
+const globalToast = useGlobalToast()
 
-const globalStore = useGlobalStore()
-
-console.log(globalStore.globalData)
+// 登陆抽屉显示
+const showLogin = ref<boolean>(false)
+const actions = [
+  {
+    name: '授权微信登陆'
+  }
+]
+async function confirmLogin() {
+  await login()
+  globalToast.success('登录成功')
+  userStore.setLoginStatus(true)
+}
+function judgeLogin() {
+  if (userStore.isLogin === false) {
+    showLogin.value = true
+  }
+}
 
 // function handleClick() {
 //   globalStore.setGlobalData('demo', '1.0.1')
@@ -185,21 +206,26 @@ function onClassifyMore() {
   })
 }
 
-// 点击跳转
-function navigateTo(path: string) {
-  router.push({ path })
-}
-
 // 下拉菜单展开/收起
 function toggleDropdown(index: number) {
   dropdownIndex.value = dropdownIndex.value === index ? -1 : index
 }
 
-function onOption1() {
-  // 处理选项一
+function onOptionRemind(item: any) {
+  judgeLogin()
+  const info = {
+    activity_id: item.activity_id,
+    start_time: item.start_time,
+    end_time: item.end_time,
+    title: item.title
+  }
+  console.log('test', JSON.stringify(info))
+  navigateTo('/subPackage/remind/index', info)
 }
-function onOption2() {
-  // 处理选项二
+async function onOptionCollect(activity_id: number) {
+  judgeLogin()
+  await addFavorite({ id: activity_id })
+  dropdownIndex.value = -1
 }
 
 // 回到顶部
@@ -243,7 +269,7 @@ async function fetchActivities(page = 1) {
     return
   activitiesLoading.value = true
   try {
-    const res = await getActivities({ page })
+    const res = await getActivities({ page, size: pageSize })
     if (page === 1) {
       activities.value = res.data as any
     } else {
@@ -270,6 +296,26 @@ function loadMoreActivities() {
     fetchActivities(activitiesPage.value + 1)
   }
 }
+// 路由跳转
+function navigateTo(url: string, params?: any) {
+  console.log('navigateTo', url)
+  if (!params) {
+    uni.navigateTo({ url })
+  } else {
+    uni.navigateTo({
+      url: `${url}?params=${encodeURIComponent(JSON.stringify(params))}`
+    })
+  }
+}
+/*
+接收参数页面：
+onLoad(options) {
+  if (options.user) {
+    const user = JSON.parse(decodeURIComponent(options.user));
+    console.log("接收到对象：", user);
+  }
+}
+*/
 </script>
 
 <style lang="scss" scoped>
