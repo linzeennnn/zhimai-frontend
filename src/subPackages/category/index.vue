@@ -123,14 +123,18 @@ const topClassifyList = ['全部', '信息资讯', '二课练测']
 const topClassifyIndex = ref(categoryStore.topClassifyIndex)
 console.log('初始 topClassifyIndex:', topClassifyIndex.value)
 
-const defaultMenu = [
-  { title: '校区', list: ['全部', '广州校区', '清远校区', '肇庆校区'], choose: [true, false, false, false], choosenum: 0 },
-  { title: '年级', list: ['全部', '大一', '大二', '大三', '大四', '专升本'], choose: [true, false, false, false, false, false], choosenum: 0 },
-  { title: '学分类型', list: ['全部', '思想成长', '文体活动', '实践实习', '创新创业', '志愿公益', '技能特长', '菁英成长'], choose: [true, false, false, false, false, false, false, false], choosenum: 0 },
-  { title: '证书', list: ['全部', '四六级', '雅思托福', '计算机等级证书', '教资', '普通话', '会计', '证券从业资格证'], choose: [true, false, false, false, false, false, false, false], choosenum: 0 },
-  { title: '院系', list: ['全部', '金投院', '会计学院', '保险学院', '财新院', '国家金融学学院', '金统院', '国教院', '大数据院', '工管院', '法学院', '外文院', '创业教育学院', '经贸院'], choose: [true, false, false, false, false, false, false, false, false, false, false, false, false, false], choosenum: 0 }
-]
-const menu = ref(categoryStore.menu?.length ? categoryStore.menu : JSON.parse(JSON.stringify(defaultMenu)))
+// import { menuModal } from './config'
+// const defaultMenu = menuModal.map((item) => {
+//   return {
+//     title: item.title,
+//     list: ['全部', ...item.list],
+//     type: item.type,
+//     choose: Array.from({ length: item.list.length + 1 }, (_v, i) => i === 0)
+//     choosenum: 0
+//   }
+// })
+
+const menu = ref(categoryStore.menu)
 console.log('初始 menu:', menu.value)
 const leftIndex = ref(0)
 const scrollToId = ref('')
@@ -157,37 +161,38 @@ function onClickLeft(idx: number) {
 function onClickOption(outIndex: number, inIndex: number) {
   console.log('onClickOption', outIndex, inIndex)
   const item = menu.value[outIndex]
+  // 选中全部
+  if (inIndex === 0) {
+    item.choose = Array.from({ length: item.list.length + 1 }, (_v, i) => i === 0)
+    item.choosenum = 0
+    return
+  }
   const len = item.choose.length
   const selectedCount = item.choose.filter(Boolean).length
   // 只剩一个选中项时不允许取消
   if (selectedCount === 1 && item.choose[inIndex])
     return
-  if (inIndex === 0) {
-    // 全部选中
-    item.choose = Array.from({ length: len }, () => true)
-    item.choosenum = len - 1
+  // 选择单个选项
+  item.choose[inIndex] = !item.choose[inIndex]
+  const selectedCountNonAll = item.choose.slice(1).filter(Boolean).length
+  item.choosenum = selectedCountNonAll
+  if (selectedCountNonAll === len - 1) {
+    item.choose[0] = true
+  } else if (selectedCountNonAll === 0) {
+    item.choose = item.choose.map((_v: boolean, i: number) => i === 0)
   } else {
-    item.choose[inIndex] = !item.choose[inIndex]
-    const selectedCountNonAll = item.choose.slice(1).filter(Boolean).length
-    item.choosenum = selectedCountNonAll
-    if (selectedCountNonAll === len - 1) {
-      item.choose[0] = true
-    } else if (selectedCountNonAll === 0) {
-      item.choose = item.choose.map((_v: boolean, i: number) => i === 0)
-    } else {
-      item.choose[0] = false
-    }
+    item.choose[0] = false
   }
   console.log('menu after option:', menu.value)
 }
 
 function resetOptions() {
   console.log('resetOptions')
-  menu.value = JSON.parse(JSON.stringify(defaultMenu))
+  categoryStore.resetMenu()
+  menu.value = categoryStore.menu
   lastMenu.value = JSON.parse(JSON.stringify(menu.value))
   showSaveModal.value = false
   leftIndex.value = 0
-  categoryStore.setMenu(JSON.parse(JSON.stringify(menu.value)))
   console.log('menu after reset:', menu.value)
 }
 
@@ -195,7 +200,8 @@ function onSearch() {
   console.log('onSearch，选中项为：', menu.value)
   categoryStore.setMenu(JSON.parse(JSON.stringify(menu.value)))
   lastMenu.value = JSON.parse(JSON.stringify(menu.value))
-  uni.showToast({ title: '已确认', icon: 'success' })
+  uni.navigateBack()
+  // uni.showToast({ title: '已确认', icon: 'success' })
 }
 
 // 移除 onBeforeRouteLeave 钩子，全部依赖微信小程序 onBackPress 拦截弹窗

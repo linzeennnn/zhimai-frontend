@@ -21,13 +21,13 @@
           </view>
           <view
             class="cursor-pointer rounded px-4 py-2 text-base text-gray-600 transition hover:bg-blue-50"
-            :class="classifyType === 'info' ? 'bg-blue-50 text-primary' : ''" @click="onClassifySelect('info')"
+            :class="classifyType === 'info' ? 'bg-blue-50 text-primary' : ''" @click="onClassifySelect('信息资讯')"
           >
             信息资讯
           </view>
           <view
             class="cursor-pointer rounded px-4 py-2 text-base text-gray-600 transition hover:bg-blue-50"
-            :class="classifyType === 'activity' ? 'bg-blue-50 text-primary' : ''" @click="onClassifySelect('activity')"
+            :class="classifyType === 'activity' ? 'bg-blue-50 text-primary' : ''" @click="onClassifySelect('二课综测')"
           >
             二课综测
           </view>
@@ -50,7 +50,10 @@
       <swiper class="mt-4 rounded-lg" indicator-dots>
         <swiper-item v-for="outIndex in Math.ceil(swiper.length / 3)" :key="outIndex">
           <view class="grid grid-cols-3 gap-2">
-            <view v-for="inIndex in 3" :key="inIndex" class="rounded-lg bg-gray-200 py-4 text-center text-base text-gray-600 shadow">
+            <view
+              v-for="inIndex in 3" :key="inIndex"
+              class="rounded-lg bg-gray-200 py-4 text-center text-base text-gray-600 shadow"
+            >
               {{ swiper[(outIndex - 1) * 3 + (inIndex - 1)] }}
             </view>
           </view>
@@ -71,14 +74,20 @@
               </text>
             </view>
             <view class="relative">
-              <view class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300" @click.stop="toggleDropdown(index)">
+              <view
+                class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300"
+                @click.stop="toggleDropdown(index)"
+              >
                 功能﹀
               </view>
               <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
                 <view class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300" @click="onOptionRemind(item)">
                   定时提醒
                 </view>
-                <view class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300" @click="onOptionCollect(item.activity_id)">
+                <view
+                  class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
+                  @click="onOptionCollect(item.activity_id)"
+                >
                   加入收藏
                 </view>
               </view>
@@ -127,8 +136,12 @@ import { login } from '@/hooks/useLogin'
 // import { onMounted, ref } from 'vue'
 import ShowHeadImg from '@/pages/components/ShowHeadImg.vue'
 import ShowImg from '@/pages/components/ShowImg.vue'
+import { useCategoryStore } from '@/pinia/store/category'
 import { useUserStore } from '@/pinia/store/user'
 import { formatTime } from '@/utils/date'
+
+const categoryStore = useCategoryStore()
+const classify = ref<any>({})
 
 const userStore = useUserStore()
 const pageSize = Appconfig.pageSize
@@ -191,7 +204,7 @@ function onClassifySelect(type: string) {
   classifyType.value = type
   showClassifyDropdown.value = false
   uni.showToast({
-    title: `已筛选: ${type}`,
+    title: `筛选${type}`,
     icon: 'success',
     duration: 800
   })
@@ -269,7 +282,7 @@ async function fetchActivities(page = 1) {
     return
   activitiesLoading.value = true
   try {
-    const res = await getActivities({ page })
+    const res = await getActivities({ page, ...classify.value })
     if (page === 1) {
       activities.value = res.data as any
     } else {
@@ -284,7 +297,23 @@ async function fetchActivities(page = 1) {
   }
 }
 
-onMounted(() => {
+onShow(() => {
+  if (categoryStore.menu.length) {
+    classify.value = {}
+    categoryStore.menu.forEach((item: any) => {
+      if (item.choosenum === 0)
+        return
+      const list: any[] = []
+      item.choose.forEach((isChoose: boolean, index: number) => {
+        if (!isChoose)
+          return
+        list.push(item.list[index])
+      })
+      classify.value[item.type] = list
+    })
+    console.log('test', classify.value)
+    return
+  }
   fetchActivities(1)
 })
 

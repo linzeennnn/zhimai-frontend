@@ -1,4 +1,4 @@
-import { get } from '@/utils/request'
+import { get, post } from '@/utils/request'
 
 /**
  * 活动详情类型（与列表单项一致，增加 isFavorited 字段）
