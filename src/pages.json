@@ -26,6 +26,15 @@
         "navigationStyle": "default",
         "navigationBarTitleText": "搜索"
       }
+    },
+    {
+      "path": "pages/act-detail/index",
+      "type": "page",
+      "name": "detail",
+      "style": {
+        "navigationStyle": "default",
+        "navigationBarTitleText": "活动详情"
+      }
     }
   ],
   "tabBar": {

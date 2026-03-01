@@ -1,4 +1,4 @@
-import { get, post } from '@/utils/request'
+import { del, get, post } from '@/utils/request'
 
 /**
  * 活动详情类型（与列表单项一致，增加 isFavorited 字段）
@@ -81,6 +81,15 @@ export function getActivities(params?: ActivitiesQuery) {
  * @param params 参数{ id : 活动ID }
  * @returns
  */
-export function addFavorite(params: any) {
-  return get<any>('/activities/user/addFavorite', params, true)
+export function addFavorite(id: number) {
+  return post<any>(`/activities/user/${id}/favorite`, undefined, true)
+}
+
+/**
+ * 取消单个活动收藏
+ * @param params 参数{ id : 活动ID }
+ * @returns
+ */
+export function removeFavorite(id: number) {
+  return del<any>(`/activities/user/${id}/favorite`, undefined, true)
 }

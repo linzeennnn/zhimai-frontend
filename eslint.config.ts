@@ -12,7 +12,9 @@ export default uniHelper({
     'uni-pages.d.ts',
     // 插件生成的文件
     'src/pages.json',
-    'src/manifest.json'
+    'src/manifest.json',
+    'src/static/**/*.png',
+    'src/static/**/*.jpg'
   ],
   rules: {
     'no-console': 'off',

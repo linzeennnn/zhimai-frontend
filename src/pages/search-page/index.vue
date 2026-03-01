@@ -13,7 +13,7 @@
     />
     <div class="relative">
       <!-- 历史记录 -->
-      <div v-if="showHistory" class="absolute box-border w-100% px-5 py-4">
+      <div v-show="showHistory" class="absolute box-border w-100% px-5 py-4">
         <div class="item-center flex justify-between py-1">
           <div class="text-5 font-bold">
             历史记录
@@ -34,11 +34,11 @@
         </div>
       </div>
       <!-- 查询结果 -->
-      <div v-else class="absolute box-border w-100% px-5 py-4">
-        <div class="py-4 text-5 font-bold">
+      <div v-show="!showHistory" class="absolute box-border w-100% py-4">
+        <div class="ml-5 py-4 text-5 font-bold">
           搜索结果
         </div>
-        <InfoList />
+        <InfoList ref="infoListVue" />
       </div>
     </div>
   </div>
@@ -53,8 +53,7 @@ import InfoList from './component/infoList.vue'
 
 const message = useMessage()
 
-const router = useRouter()
-const globalStore = useGlobalStore()
+const infoListVue = ref()
 const searchContent = ref<string>('')
 const historyList = ref<Array<string>>([
   'aaaaa11',
@@ -69,14 +68,14 @@ const handleSearch = debounce(() => {
 }, 500)
 
 // 搜索
-function search() {
+async function search() {
   searchContent.value = searchContent.value.trim()
   if (!searchContent.value)
     return
   showHistory.value = false
   historyList.value.unshift(searchContent.value)
   limitLength()
-  // 接口，待联调
+  infoListVue.value?.resetSearch(searchContent.value)
 }
 
 // 删除单个历史记录

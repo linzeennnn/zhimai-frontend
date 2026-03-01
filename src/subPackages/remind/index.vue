@@ -26,27 +26,30 @@
             {{ w }}
           </view>
         </view>
-        <view class="flex flex-wrap">
+        <view
+          v-for="(week, wIdx) in calendarGrid"
+          :key="wIdx" class="flex"
+        >
           <view
-            v-for="(d, idx) in calendarGrid"
-            :key="idx"
-            class="w-1/7 p-1 text-center"
+            v-for="(day, idx) in week"
+            :key="`${wIdx}-${idx}`"
+            class="flex-1 p-1 text-center"
           >
             <view
               class="mx-auto h-9 w-9 flex items-center justify-center rounded-full"
               :class="{
-                'text-gray-300': !d,
-                'bg-blue-500 text-white': isToday(d),
-                'ring-2 ring-blue-200': d === curDay,
+                'text-gray-300': !day,
+                'bg-blue-500 text-white': isToday(day),
+                'ring-2 ring-blue-200': day === curDay,
               }"
-              @click="onDayClick(idx)"
+              @click="onDayClick(day)"
             >
-              <text v-if="d">
-                {{ d }}
+              <text v-if="day">
+                {{ day }}
               </text>
             </view>
             <view
-              v-if="d && hasEventOn(d)"
+              v-if="day && hasEventOn(day)"
               class="mx-auto mt-1 h-1.5 w-1.5 rounded-full bg-blue-500"
             />
           </view>
@@ -116,20 +119,31 @@ const curYear = ref<number>(today.getFullYear())
 const curMonth = ref<number>(today.getMonth() + 1)
 const curDay = ref<number>(today.getDate())
 
-const weeks = ['日', '一', '二', '三', '四', '五', '六']
+const weeks = ['一', '二', '三', '四', '五', '六', '日']
 
-const calendarGrid = ref<number[]>([])
+const calendarGrid = ref<any>([])
 
 function buildCalendar(year: number, month: number) {
+  calendarGrid.value = []
   const first = new Date(year, month - 1, 1)
   const last = new Date(year, month, 0)
   const days = last.getDate()
   const startWeek = first.getDay()
-  const grid: number[] = []
-  for (let i = 0; i < startWeek; i++) grid.push(0)
-  for (let d = 1; d <= days; d++) grid.push(d)
-  while (grid.length % 7 !== 0) grid.push(0)
-  calendarGrid.value = grid
+
+  let grid: number[] = []
+  let count = 1
+  for (let i = 1; i < startWeek; i++) grid.push(0)
+  while (count <= days) {
+    grid.push(count)
+    count++
+    if (grid.length % 7 === 0) {
+      calendarGrid.value.push(grid)
+      grid = []
+    }
+  }
+  while (grid.length > 0 && grid.length < 7) grid.push(0)
+  if (grid.length > 0)
+    calendarGrid.value.push(grid)
 }
 
 buildCalendar(curYear.value, curMonth.value)
@@ -193,12 +207,11 @@ function isToday(d: number) {
   return d === today.getDate() && curMonth.value === (today.getMonth() + 1) && curYear.value === today.getFullYear()
 }
 
-function onDayClick(idx: number) {
-  const d = calendarGrid.value[idx]
-  if (!d) {
+function onDayClick(day: number) {
+  if (!day) {
     return
   }
-  curDay.value = d
+  curDay.value = day
 }
 
 const filteredList = computed(() => {

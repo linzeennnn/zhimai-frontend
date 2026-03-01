@@ -62,13 +62,15 @@
     </view>
     <view class="info-list">
       <view class="space-y-4">
-        <view v-for="(item, index) in activities" :key="item.activity_id" class="rounded-lg bg-white p-4 shadow">
+        <view
+          v-for="(item, index) in activities"
+          :key="item.activity_id"
+          class="rounded-lg bg-white p-4 shadow"
+          @click="navigateTo('/pages/act-detail/index', { activity_id: item.activity_id })"
+        >
           <view class="mb-2 flex items-center justify-between">
             <view class="flex items-center gap-2">
               <ShowHeadImg />
-              <!-- <view class="h-8 w-8 flex items-center justify-center rounded-full bg-gray-200 text-lg text-gray-400">
-                {{ '人' }}
-              </view> -->
               <text class="text-base text-gray-800 font-bold">
                 {{ item.organizer ?? '公众号标题' }}
               </text>
@@ -78,24 +80,24 @@
                 class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300"
                 @click.stop="toggleDropdown(index)"
               >
-                功能﹀
+                功能 ﹀
               </view>
               <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
-                <view class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300" @click="onOptionRemind(item)">
+                <view
+                  class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
+                  @click.stop="onOptionRemind(item)"
+                >
                   定时提醒
                 </view>
                 <view
                   class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
-                  @click="onOptionCollect(item.activity_id)"
+                  @click.stop="onOptionCollect(item.activity_id)"
                 >
-                  加入收藏
+                  {{ item.isFavorited ? '取消收藏' : '加入收藏' }}
                 </view>
               </view>
             </view>
           </view>
-          <!-- <view class="mb-2 h-24 flex items-center justify-center overflow-hidden rounded-lg bg-blue-50 text-xl text-blue-400 font-bold">
-            {{ item.image_url ?? '活动图片' }}
-          </view> -->
           <ShowImg :item="item" />
           <view class="mb-1 text-base text-gray-700 font-bold">
             {{ item.title ?? '活动标题' }}
@@ -126,7 +128,7 @@
 
 <script setup lang="ts">
 // 快到底部提前加载
-import type { ActivityItem } from '@/api/activities'
+import type { ActivityDetail } from '@/api/activities'
 import { debounce } from 'wot-design-uni/components/common/util'
 import { addFavorite, getActivities } from '@/api/activities'
 import Appconfig from '@/config'
@@ -162,32 +164,16 @@ async function confirmLogin() {
 function judgeLogin() {
   if (userStore.isLogin === false) {
     showLogin.value = true
+    return false
   }
+  return true
 }
 
-// function handleClick() {
-//   globalStore.setGlobalData('demo', '1.0.1')
-//   router.push({
-//     path: '/pages-sub/demo/index',
-//     query: {
-//       name: '张三'
-//     }
-//   })
-// }
-
-// 数据
-// const back_top = ref(0)
-// const isTop = ref(false)
-// const infoList = ref([1, 2, 3, 4, 5, 6])
 const showClassifyDropdown = ref(false)
 const classifyType = ref('all')
-// const classifyTypes = [
-//   { label: '全部', value: 'all' },
-//   { label: '信息资讯', value: 'info' },
-//   { label: '二课综测', value: 'activity' }
-// ]
+
 const swiper = ref(['校园跑通知', '四六级考试', '装修通知', '放假通知', '停水通知', '停电通知'])
-const activities = ref<ActivityItem[]>([])
+const activities = ref<ActivityDetail[]>([])
 const activitiesPage = ref(1)
 const activitiesPageSize = ref(pageSize)
 const totalActivities = ref(0)
@@ -225,7 +211,8 @@ function toggleDropdown(index: number) {
 }
 
 function onOptionRemind(item: any) {
-  judgeLogin()
+  if (!judgeLogin())
+    return
   const info = {
     activity_id: item.activity_id,
     start_time: item.start_time,
@@ -235,29 +222,14 @@ function onOptionRemind(item: any) {
   console.log('test', JSON.stringify(info))
   navigateTo('/subPackages/remind/index', info)
 }
+
 async function onOptionCollect(activity_id: number) {
-  judgeLogin()
-  await addFavorite({ id: activity_id })
+  if (!judgeLogin())
+    return
+  const res = await addFavorite(activity_id)
+  console.log('收藏结果', res)
   dropdownIndex.value = -1
 }
-
-// 回到顶部
-// function backTop() {
-//   uni.pageScrollTo({
-//     scrollTop: 0,
-//     duration: 100
-//   })
-// }
-
-// 页面滚动事件，显示回到顶部按钮
-// onPageScroll((e) => {
-//   const scrollTop = e.scrollTop
-//   if (scrollTop >= back_top.value && !isTop.value) {
-//     isTop.value = true
-//   } else if (scrollTop <= back_top.value && isTop.value) {
-//     isTop.value = false
-//   }
-// })
 
 const onScroll = debounce((e: any) => {
   // 兼容微信小程序 scrollHeight/clientHeight 获取不到的问题
@@ -312,7 +284,6 @@ onShow(() => {
       classify.value[item.type] = list
     })
     console.log('test', classify.value)
-    return
   }
   fetchActivities(1)
 })
@@ -327,12 +298,15 @@ function loadMoreActivities() {
 }
 // 路由跳转
 function navigateTo(url: string, params?: any) {
-  console.log('navigateTo', url)
+  console.log('navigateTo', url, params)
   if (!params) {
     uni.navigateTo({ url })
   } else {
+    const keys = Object.keys(params).map((key) => {
+      return `${key}=${encodeURIComponent(JSON.stringify(params[key]))}`
+    }).join('&')
     uni.navigateTo({
-      url: `${url}?params=${encodeURIComponent(JSON.stringify(params))}`
+      url: `${url}?${keys}`
     })
   }
 }
