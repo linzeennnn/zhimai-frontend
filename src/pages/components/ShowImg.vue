@@ -1,4 +1,5 @@
 <!-- 活动图片 -->
+<!-- 根据活动类型，显示图片，数据库中未保存活动图片，固采用static/activity-type中的图片 -->
 <template>
   <template v-if="item.activity_type">
     <div class="my-2 h-38 flex items-center justify-center overflow-hidden rounded-lg bg-blue-50 text-50rpx text-blue-400 font-bold">

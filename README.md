@@ -11,15 +11,17 @@
 - **Vite**：快速的开发构建工具
 - **Pinia**：Vue 3 的状态管理方案
 - **uni-mini-router**：小程序路由管理
-- **Alova**：HTTP 请求库
+- **Alova**：HTTP 请求库（封装成get/post/put/del四种请求，源码在utils下的request）
 - **UnoCSS**：原子化 CSS 框架
 - **Wot Design Uni**：UI 组件库
 - **ESLint**：代码规范检查
+*ESLint代码检查可以根据编码需求进行补充*
+*组件命名采用大驼峰*
 
 ## 环境要求
 
 - Node.js >= 20
-- pnpm (推荐的包管理器)/yarn
+- npm(目前用的)/pnpm (推荐的包管理器)/yarn
 
 ## 项目运行
 
@@ -31,18 +33,25 @@ npm install / pnpm install / yarn install
 
 ### 开发模式
 
-运行 H5 版本：
+运行 H5 版本（未使用）：
 
 ```bash
 npm run dev:h5 / pnpm dev:h5
 ```
 
-运行微信小程序版本：(运行方式：等待构建完成后打开 微信开发者工具,  导入 dist\dev\mp-weixin 运行)
+运行微信小程序版本（使用中）：
 
 ```bash
 npm run dev:wx / pnpm dev:wx
 ```
+运行方式：等待控制台运行成功后（最后一行提示ready in XXXXms）打开 “微信开发者工具”, 导入 dist\dev\mp-weixin 运行
 
+**这里发现了几个问题，还没解决**
+```
+1. 运行 npm run dev:wx 后，会因为 UnoCSS / Wot Design Uni的兼容问题，在微信开发者软件中打开dist/dev会报错，提示app.wxss文件出错，需要把app.wxss里报错部分的乱码删掉
+2. 运行后，会自动修改manifest.json和pages.json两个文件，需要在vscode中撤销更改（还没找到解决方案，推测是uniapp构建有兼容问题自动修改了这两个文件）
+3. build构建项目会失败，与问题1、2有关
+```
 ### 构建项目
 
 构建 H5 版本：
@@ -61,27 +70,68 @@ npm run build:wx / pnpm build:wx
 
 ```
 uni-vue3-vite/
-├── src/                    # 源代码
-│   ├── api/                # API 接口定义
-│   ├── components/         # 公共组件
-│   ├── hooks/              # 自定义 Hooks
-│   ├── pages/              # 主包页面
-│   ├── pages-sub/          # 分包页面
-│   ├── router/             # 路由配置
-│   ├── static/             # 静态资源
-│   ├── store/              # Pinia 状态管理
-│   ├── utils/              # 工具函数
-│   ├── App.vue             # 应用入口组件
-│   ├── config.ts           # 应用配置
-│   ├── main.ts             # 应用入口
-│   ├── manifest.json       # 应用配置文件
-│   ├── pages.json          # 页面配置
-│   └── uni.scss            # 全局样式
-├── types/                  # TypeScript 类型定义
-├── .vscode/                # VS Code 配置
-├── manifest.config.ts      # manifest 配置
-├── pages.config.ts         # 页面配置
-├── vite.config.ts          # Vite 配置
+├── .vscode/                  # VS Code 配置
+├── dist                      # 项目打包文件
+│   ├── dev                   # 运行文件
+|      ├── mp-weixin          # 微信小程序运行文件
+│   ├── build                 # 构建文件
+|      ├── mp-weixin          # 微信小程序构建文件
+├── src/                      # 源代码
+│   ├── api/                  # API 接口定义
+|      ├── index.ts           # 导出所有API请求
+|      ├── user.ts            # 用户相关API
+|      ├── XXX.ts             # 其他API请求，可以自己定义
+│   ├── components/           # 公共组件（暂无使用）
+│   ├── hooks/                # 自定义 Hooks
+|      ├── useGlobalToast.ts  # 全局轻提示，使用说明见下文，直接搜索toast
+|      ├── useLogin.ts        # 用户登陆的钩子
+|      ├── useNetwork.ts      # 检查网络状态（在全局已使用）
+│   ├── middleware            # 中间件
+│   ├── pinia
+|      ├── index.ts/init.ts   # 封装好的pinia，会自动导入并启用store下的所有文件
+|      ├── store
+|         ├── category.ts     # 分类菜单数据
+|         ├── user.ts         # 用户信息数据
+│   ├── router/               # 路由配置
+│   ├── static/               # 静态资源
+|      ├── activity-type      # 活动图片
+|      ├── self-center        # 个人中心图片
+|      ├── tabbar             # 下方导航图片
+│   ├── pages/                # 主包页面
+|      ├── components         # 公用组件
+|         ├── ShowHeadImg.vue # 显示公众号图片和名称
+|         ├── ShowImg.vue     # 根据活动类型，显示活动图片
+|      ├── index              # 首页
+|      ├── act-detail         # 活动详情
+|      ├── search-page        # 搜索页
+|      ├── self-center        # 个人中心
+│   ├── subPackages/          # 分包页面
+|      ├── components         # 公共组件
+|      ├── category           # 分类页面
+|      ├── collection         # 收藏页面
+|      ├── edit-info          # 编辑个人资料页面
+|      ├── history            # 历史记录页面
+|      ├── remind             # 定时提醒页面
+|      ├── remind-create      # 创建定时提醒页面
+│   ├── types                 # 自定义TypeScript类型限制
+│   ├── utils/                # 工具函数
+|      ├── request            # 封装请求
+|         ├── index.ts        # 导出常用请求函数，设置请求参数
+|         ├── alova.ts        # 封装alova请求（使用中）
+|         ├── uni-request.ts  # 封装uniapp原生请求（未使用）
+|      ├── date               # 格式化时间
+|      ├── token              # token
+│   ├── App.vue               # 应用入口组件
+│   ├── config.ts             # 应用配置
+│   ├── main.ts               # 应用入口
+│   ├── manifest.json         # 应用配置文件
+│   ├── pages.json            # 页面配置
+│   ├── theme.json            # 背景主题文件
+│   └── uni.scss              # 全局样式
+├── types/                    # TypeScript 类型定义
+├── manifest.config.ts        # manifest 配置
+├── pages.config.ts           # 页面配置
+├── vite.config.ts            # Vite 配置
 └── ...
 ```
 
@@ -234,7 +284,7 @@ const fetchData = async () => {
 #### 定义 Store
 
 ```typescript
-// src/store/user.ts
+// src/pinia/user.ts
 export const useUserStore = defineStore('user', () => {
   const isLogin = ref(false)
 
