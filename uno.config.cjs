@@ -11,12 +11,13 @@ const {
 module.exports = defineConfig({
   presets: [
     presetUni({
-      attributify: {
-        // 自定义前缀
-        // prefix: 'u-',
-        // 只匹配以前缀开头的属性
-        prefixedOnly: true
-      }
+      // attributify: {
+      //   // 自定义前缀
+      //   // prefix: 'u-',
+      //   // 只匹配以前缀开头的属性
+      //   prefixedOnly: true,
+      // }
+      attributify: false
     }),
     presetIcons({
       scale: 1.2,
@@ -25,9 +26,9 @@ module.exports = defineConfig({
         'display': 'inline-block',
         'vertical-align': 'middle'
       }
-    }),
+    })
     // 是否只识别 class，不识别属性
-    presetAttributify()
+    // presetAttributify()
   ],
   transformers: [
     // 启用指令功能：主要用于支持 @apply、@screen 和 theme() 等 CSS 指令
