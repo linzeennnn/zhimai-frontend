@@ -1,14 +1,14 @@
-import { presetUni } from '@uni-helper/unocss-preset-uni'
-
-import {
+// 改名为 uno.config.cjs
+const { presetUni } = require('@uni-helper/unocss-preset-uni')
+const {
   defineConfig,
   presetAttributify,
   presetIcons,
   transformerDirectives,
   transformerVariantGroup
-} from 'unocss'
+} = require('unocss')
 
-export default defineConfig({
+module.exports = defineConfig({
   presets: [
     presetUni({
       attributify: {
@@ -26,13 +26,13 @@ export default defineConfig({
         'vertical-align': 'middle'
       }
     }),
-    // 是否只识别class 不识别属性
+    // 是否只识别 class，不识别属性
     presetAttributify()
   ],
   transformers: [
     // 启用指令功能：主要用于支持 @apply、@screen 和 theme() 等 CSS 指令
     transformerDirectives(),
-    // 支持css class组合，eg: `<div class="hover:(bg-gray-400 font-medium) font-(light mono)">测试 unocss</div>`
+    // 支持 CSS class 组合，例如: <div class="hover:(bg-gray-400 font-medium) font-(light mono)">测试 unocss</div>
     transformerVariantGroup()
   ],
   shortcuts: [],

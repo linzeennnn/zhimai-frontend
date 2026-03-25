@@ -37,7 +37,8 @@
     "**/*.tsx",
     "**/*.jsx",
     "**/*.vue",
-    "**/*.js"
+    "**/*.js",
+    "uno.config.cjs"
   ],
   "vueCompilerOptions": {
     "plugins": ["@uni-helper/uni-types/volar-plugin"]
