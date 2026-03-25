@@ -2,25 +2,61 @@
   "pages": [
     {
       "path": "pages/index/index",
-      "type": "home"
-    },
-    {
-      "path": "pages/act-detail/index",
-      "type": "page"
-    },
-    {
-      "path": "pages/search-page/index",
-      "type": "page"
+      "type": "home",
+      "name": "info",
+      "style": {
+        "navigationStyle": "default",
+        "navigationBarTitleText": "信息资讯"
+      }
     },
     {
       "path": "pages/self-center/index",
-      "type": "page"
+      "type": "page",
+      "name": "self-center",
+      "style": {
+        "navigationStyle": "default",
+        "navigationBarTitleText": "个人中心"
+      }
     },
     {
-      "path": "pages/search-page/component/infoList",
-      "type": "page"
+      "path": "pages/search-page/index",
+      "type": "page",
+      "name": "search",
+      "style": {
+        "navigationStyle": "default",
+        "navigationBarTitleText": "搜索"
+      }
+    },
+    {
+      "path": "pages/act-detail/index",
+      "type": "page",
+      "name": "detail",
+      "style": {
+        "navigationStyle": "default",
+        "navigationBarTitleText": "活动详情"
+      }
     }
   ],
+  "tabBar": {
+    "color": "#2c2c2c",
+    "selectedColor": "#2785FF",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/info.png",
+        "selectedIconPath": "static/tabbar/info-active.png",
+        "text": "信息资讯"
+      },
+      {
+        "pagePath": "pages/self-center/index",
+        "iconPath": "static/tabbar/self.png",
+        "selectedIconPath": "static/tabbar/self-active.png",
+        "text": "个人中心"
+      }
+    ]
+  },
   "globalStyle": {
     "backgroundColor": "@bgColor",
     "backgroundColorBottom": "@bgColorBottom",
@@ -39,5 +75,65 @@
     }
   },
   "middleware": [],
-  "subPackages": []
+  "subPackages": [
+    {
+      "root": "subPackages",
+      "pages": [
+        {
+          "path": "category/index",
+          "type": "page",
+          "name": "category",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "分类"
+          }
+        },
+        {
+          "path": "edit-info/index",
+          "type": "page",
+          "name": "edit-info",
+          "style": {
+            "navigationStyle": "custom",
+            "navigationBarTitleText": "编辑个人资料"
+          }
+        },
+        {
+          "path": "remind/index",
+          "type": "page",
+          "name": "remind",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "定时提醒"
+          }
+        },
+		{
+          "path": "remind-create/index",
+          "type": "page",
+          "name": "remind-create",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "新建定时提醒"
+          }
+        },
+        {
+          "path": "collection/index",
+          "type": "page",
+          "name": "collection",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "我的收藏"
+          }
+        },
+        {
+          "path": "history/index",
+          "type": "page",
+          "name": "history",
+          "style": {
+            "navigationStyle": "default",
+            "navigationBarTitleText": "历史记录"
+          }
+        }
+      ]
+    }
+  ]
 }
