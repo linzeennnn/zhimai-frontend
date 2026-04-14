@@ -66,35 +66,33 @@
           v-for="(item, index) in activities"
           :key="item.activity_id"
           class="rounded-lg bg-white p-4 shadow"
-          @click="navigateTo('/pages/act-detail/index', { activity_id: item.activity_id })"
+          @click="goToArticle(item)"
         >
-          <view class="mb-2 flex items-center justify-between">
-            <view class="flex items-center gap-2">
-              <ShowHeadImg />
-              <text class="text-base text-gray-800 font-bold">
-                {{ item.organizer ?? '公众号标题' }}
-              </text>
+          <view class="flex items-center gap-2">
+            <ShowHeadImg />
+            <text class="text-base text-gray-800 font-bold">
+              {{ item.organizer ?? '公众号标题' }}
+            </text>
+          </view>
+          <view class="relative">
+            <view
+              class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300"
+              @click.stop="toggleDropdown(index)"
+            >
+              功能 ﹀
             </view>
-            <view class="relative">
+            <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
               <view
-                class="cursor-pointer rounded bg-gray-100 px-2 py-1 text-gray-500 hover:bg-gray-300"
-                @click.stop="toggleDropdown(index)"
+                class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
+                @click.stop="onOptionRemind(item)"
               >
-                功能 ﹀
+                定时提醒
               </view>
-              <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
-                <view
-                  class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
-                  @click.stop="onOptionRemind(item)"
-                >
-                  定时提醒
-                </view>
-                <view
-                  class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
-                  @click.stop="onOptionCollect(item.activity_id)"
-                >
-                  {{ item.isFavorited ? '取消收藏' : '加入收藏' }}
-                </view>
+              <view
+                class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
+                @click.stop="onOptionCollect(item.activity_id)"
+              >
+                {{ item.isFavorited ? '取消收藏' : '加入收藏' }}
               </view>
             </view>
           </view>
@@ -114,13 +112,13 @@
       <view v-else class="py-6 text-center text-gray-400">
         触碰到我的底线了~
       </view>
-    </view>
-    <!-- 回到顶部按钮 -->
-    <!-- <view id="to-top" class="fixed bottom-16 right-4 z-50" bindtap="backTop" wx:if="{{isTop}}">
+      <!-- 回到顶部按钮 -->
+      <!-- <view id="to-top" class="fixed bottom-16 right-4 z-50" bindtap="backTop" wx:if="{{isTop}}">
       <view class="h-10 w-10 flex cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-lg transition hover:bg-primary/80">
         ↑
       </view>
     </view> -->
+    </view>
   </scroll-view>
   <!-- 授权微信操作操作 -->
   <wd-action-sheet v-model="showLogin" :actions="actions" @close="showLogin = false" @select="confirmLogin" />
@@ -129,13 +127,14 @@
 <script setup lang="ts">
 // 快到底部提前加载
 import type { ActivityDetail } from '@/api/activities'
+// import { onPageScroll } from '@dcloudio/uni-app'
+import { onShow } from '@dcloudio/uni-app'
+import { onMounted, ref } from 'vue'
 import { debounce } from 'wot-design-uni/components/common/util'
 import { addFavorite, getActivities } from '@/api/activities'
 import Appconfig from '@/config'
 import { useGlobalToast } from '@/hooks/useGlobalToast'
 import { login } from '@/hooks/useLogin'
-// import { onPageScroll } from '@dcloudio/uni-app'
-// import { onMounted, ref } from 'vue'
 import ShowHeadImg from '@/pages/components/ShowHeadImg.vue'
 import ShowImg from '@/pages/components/ShowImg.vue'
 import { useCategoryStore } from '@/pinia/store/category'
@@ -319,6 +318,18 @@ onLoad(options) {
   }
 }
 */
+// 定义 goToArticle 函数
+function goToArticle(item: any) {
+  const url = item.link
+
+  if (!url) {
+    uni.showToast({ title: '链接不存在', icon: 'none' })
+    return
+  }
+  wx.navigateTo({
+    url: `/pages/webview/webview?url=${encodeURIComponent(url)}`
+  })
+}
 </script>
 
 <style lang="scss" scoped>
