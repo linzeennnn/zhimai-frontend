@@ -85,7 +85,7 @@
               <view v-if="dropdownIndex === index" class="absolute right-0 z-10 mt-2 w-24 rounded-lg bg-white shadow">
                 <view
                   class="cursor-pointer rounded px-3 py-2 hover:bg-gray-300"
-                  @click.stop="onOptionRemind(item)"
+                  @click.stop="setReminder(item)"
                 >
                   定时提醒
                 </view>
@@ -124,6 +124,45 @@
   </scroll-view>
   <!-- 授权微信操作操作 -->
   <wd-action-sheet v-model="showLogin" :actions="actions" @close="showLogin = false" @select="confirmLogin" />
+
+  <!-- 自定义提醒弹窗 -->
+  <wd-popup v-model="showNoticePopup" position="center" round closeable custom-style="width: 85%; max-width: 600rpx; padding: 0; overflow: hidden;">
+    <view class="custom-notice-box">
+      <view class="notice-header flex items-center rounded-t-lg bg-orange-50 p-4">
+        <wd-icon name="warn" size="24px" color="#ed7b2f" custom-class="mr-2" />
+        <text class="text-base text-gray-800 font-bold">
+          您有事项即将截止
+        </text>
+      </view>
+      <view class="notice-content max-h-60 overflow-y-auto p-4 text-sm text-gray-600">
+        <text class="mb-2 block">
+          您已订阅提醒的事项，剩余时长不足24小时，请尽快处理：
+        </text>
+        <view v-for="(item, index) in urgentList" :key="index" class="mb-2 flex items-start">
+          <wd-icon name="check-circle-fill" size="18px" color="#ed7b2f" custom-class="mt-1 mr-2" />
+          <view class="flex-1">
+            <text class="text-gray-800 font-medium">
+              {{ item.title }}
+            </text>
+            <text class="ml-2 text-gray-500">
+              截止：{{ item.endTime }}
+            </text>
+          </view>
+        </view>
+        <view v-if="urgentList.length === 0" class="text-center text-gray-400">
+          暂无即将截止的事项
+        </view>
+      </view>
+      <view class="flex border-t border-gray-100">
+        <view class="flex-1 bg-gray-50 py-3 text-center text-gray-600 active:bg-gray-100" @click="showNoticePopup = false">
+          稍后提醒
+        </view>
+        <view class="flex-1 bg-blue-500 py-3 text-center text-white active:bg-blue-600" @click="goToRemindPage">
+          查看详情
+        </view>
+      </view>
+    </view>
+  </wd-popup>
 </template>
 
 <script setup lang="ts">
@@ -151,6 +190,12 @@ const globalToast = useGlobalToast()
 
 // 登陆抽屉显示
 const showLogin = ref<boolean>(false)
+// 弹窗相关
+const showNoticePopup = ref(false)
+const urgentList = ref([
+  { title: '互联网+大赛报名', endTime: '今日 23:59' },
+  { title: '奖学金申请提交', endTime: '明日 12:00' }
+])
 const actions = [
   {
     name: '授权微信登陆'
@@ -211,16 +256,32 @@ function toggleDropdown(index: number) {
 }
 
 function onOptionRemind(item: any) {
+  console.log('onOptionRemind 被调用了', item)
   if (!judgeLogin())
     return
-  const info = {
-    activity_id: item.activity_id,
-    start_time: item.start_time,
-    end_time: item.end_time,
-    title: item.title
-  }
-  console.log('test', JSON.stringify(info))
-  navigateTo('/subPackages/remind/index', info)
+
+  // 保存提醒时间到本地存储
+  const remindTime = new Date(item.end_time).getTime()
+  uni.setStorageSync('noticeTime', remindTime)
+
+  // 弹出提示框
+  uni.showModal({
+    title: '定时提醒',
+    content: '已设置提醒，将在活动开始前通知您',
+    showCancel: false,
+    success: () => {
+      console.log('提醒已设置')
+    }
+  })
+
+  // 可选：仍然跳转到日历页面
+  // const info = {
+  //   activity_id: item.activity_id,
+  //   start_time: item.start_time,
+  //   end_time: item.end_time,
+  //   title: item.title
+  // }
+  // navigateTo('/subPackages/remind/index', info)
 }
 
 async function onOptionCollect(activity_id: number) {
@@ -230,7 +291,68 @@ async function onOptionCollect(activity_id: number) {
   console.log('收藏结果', res)
   dropdownIndex.value = -1
 }
+// 设置提醒
+function setReminder(item: any) {
+  if (!judgeLogin())
+    return
+  // 临时：改成 1 分钟后提醒
+  const remindTime = Date.now() + 60 * 1000 // 1分钟 = 60000 毫秒
+  uni.setStorageSync('noticeTime', remindTime)
 
+  uni.showModal({
+    title: '定时提醒',
+    content: '已设置提醒，将在活动开始前通知您',
+    showCancel: false
+  })
+}
+// 检查提醒弹窗
+function checkUrgentNotices() {
+  try {
+    const noticeTime = uni.getStorageSync('noticeTime')
+
+    if (!noticeTime) {
+      if (urgentList.value.length === 0) {
+        urgentList.value = [
+          { title: '互联网+大赛报名', endTime: '今日 23:59' },
+          { title: '奖学金申请提交', endTime: '明日 12:00' }
+        ]
+      }
+      return
+    }
+
+    const currentTime = Date.now()
+    const timeDiff = noticeTime - currentTime
+    const ONE_DAY = 24 * 60 * 60 * 1000
+
+    if (timeDiff > 0 && timeDiff <= ONE_DAY) {
+      const remainingHours = Math.ceil(timeDiff / (60 * 60 * 1000))
+      urgentList.value = [{
+        title: '您设置的活动提醒',
+        endTime: `${remainingHours}小时后`
+      }]
+      showNoticePopup.value = true
+      return
+    }
+
+    if (timeDiff <= 0) {
+      uni.removeStorageSync('noticeTime')
+      urgentList.value = [
+        { title: '互联网+大赛报名', endTime: '今日 23:59' },
+        { title: '奖学金申请提交', endTime: '明日 12:00' }
+      ]
+    }
+  } catch (error) {
+    console.error('检查提醒失败', error)
+  }
+}
+
+// 跳转到提醒页面
+function goToRemindPage() {
+  showNoticePopup.value = false
+  uni.navigateTo({
+    url: '/subPackages/remind/index'
+  })
+}
 const onScroll = debounce((e: any) => {
   // 兼容微信小程序 scrollHeight/clientHeight 获取不到的问题
   // 只用 scrollTop 判断，快到底部时触发
@@ -270,6 +392,7 @@ async function fetchActivities(page = 1) {
 }
 
 onShow(() => {
+  checkUrgentNotices()
   if (categoryStore.menu.length) {
     classify.value = {}
     categoryStore.menu.forEach((item: any) => {

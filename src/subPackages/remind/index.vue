@@ -118,6 +118,7 @@ const today = new Date()
 const curYear = ref<number>(today.getFullYear())
 const curMonth = ref<number>(today.getMonth() + 1)
 const curDay = ref<number>(today.getDate())
+const selectedTimestamp = ref<number | null>(null)
 
 const weeks = ['一', '二', '三', '四', '五', '六', '日']
 
@@ -212,6 +213,9 @@ function onDayClick(day: number) {
     return
   }
   curDay.value = day
+  // 保存选中的时间戳
+  const selectedDate = new Date(curYear.value, curMonth.value - 1, day)
+  selectedTimestamp.value = selectedDate.getTime()
 }
 
 const filteredList = computed(() => {
@@ -249,7 +253,39 @@ function shortMonthDay(d: string) {
 }
 
 function onCreate() {
-  uni.navigateTo({ url: '/subPackages/remind-create/index' })
+  if (selectedTimestamp.value) {
+    // 保存到本地存储
+    uni.setStorageSync('noticeTime', selectedTimestamp.value)
+    uni.showToast({ title: '提醒已设置', icon: 'success' })
+
+    // 添加到 events 数组，让日历显示小蓝点
+    const year = curYear.value
+    const month = String(curMonth.value).padStart(2, '0')
+    const day = String(curDay.value).padStart(2, '0')
+    const dateStr = `${year}-${month}-${day}`
+
+    // 检查是否已经存在该日期的提醒
+    const alreadyExists = events.value.some((e: any) => e.beginDate === dateStr)
+    if (!alreadyExists) {
+      const newEvent = {
+        id: Date.now(),
+        title: '提醒事项',
+        beginDate: dateStr,
+        endDate: dateStr,
+        beginTime: '00:00',
+        endTime: '23:59',
+        finish: false
+      }
+      events.value.push(newEvent)
+      // 刷新日历视图
+      buildCalendar(curYear.value, curMonth.value)
+    }
+
+    // 可选：跳转或停留
+    // uni.navigateTo({ url: '/subPackages/remind-create/index' })
+  } else {
+    uni.showToast({ title: '请先选择日期', icon: 'none' })
+  }
 }
 
 const showBackTop = ref(false)
